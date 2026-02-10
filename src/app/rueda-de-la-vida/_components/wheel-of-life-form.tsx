@@ -215,17 +215,24 @@ async function svgToDataUrl(container: HTMLElement): Promise<string> {
       const c = document.createElement("canvas");
       c.width = w;
       c.height = h;
-      const ctx = c.getContext("2d")!;
+      const ctx = c.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to get canvas 2D context"));
+        return;
+      }
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, w, h);
       ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
       resolve(c.toDataURL("image/png"));
     };
-    img.onerror = reject;
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
     img.src = url;
   });
-}
 
 // ── Main component ──────────────────────────────────────────────────────
 
