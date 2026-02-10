@@ -233,6 +233,7 @@ async function svgToDataUrl(container: HTMLElement): Promise<string> {
     };
     img.src = url;
   });
+}
 
 // ── Main component ──────────────────────────────────────────────────────
 
