@@ -1,35 +1,7 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-} from "recharts";
-import { jsPDF } from "jspdf";
-import { Download, RotateCcw } from "lucide-react";
-
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -38,12 +10,39 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import {
   Field,
-  FieldLabel,
   FieldError,
   FieldGroup,
+  FieldLabel,
 } from "@/components/ui/field";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { jsPDF } from "jspdf";
+import { Download, RotateCcw } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+} from "recharts";
+import * as z from "zod";
 
 // ── Wheel type definitions ──────────────────────────────────────────────
 
@@ -184,7 +183,6 @@ async function svgToDataUrl(container: HTMLElement): Promise<string> {
   clone.setAttribute("height", String(h));
   clone.setAttribute("viewBox", `0 0 ${bbox.width} ${bbox.height}`);
 
-  // Copy computed styles for every text node so they survive serialisation
   const origTexts = svg.querySelectorAll("text, tspan");
   const cloneTexts = clone.querySelectorAll("text, tspan");
   origTexts.forEach((el, i) => {

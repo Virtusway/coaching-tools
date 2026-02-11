@@ -11,14 +11,12 @@ export const metadata: Metadata = {
 export default function RuedaDeLaVidaPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Decorative background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-linear-to-br from-emerald-100/60 to-cyan-100/40 blur-3xl dark:from-emerald-950/30 dark:to-cyan-950/20" />
         <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-linear-to-tr from-rose-100/50 to-amber-100/30 blur-3xl dark:from-rose-950/20 dark:to-amber-950/10" />
       </div>
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Header */}
         <header className="mb-10 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-white/60 px-4 py-1.5 text-sm font-medium shadow-sm backdrop-blur dark:bg-white/5">
             <CircleDotIcon className="size-4 text-emerald-600 dark:text-emerald-400" />
@@ -34,7 +32,6 @@ export default function RuedaDeLaVidaPage() {
           </p>
         </header>
 
-        {/* Form + Chart */}
         <WheelOfLifeForm />
       </main>
     </div>
