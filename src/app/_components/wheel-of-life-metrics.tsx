@@ -1,11 +1,17 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 export function ScoreIndicator({
   value,
   color,
 }: Readonly<{ value: number; color: string }>) {
+  const t = useTranslations("WheelForm");
+
   return (
     <div
       className="flex items-center gap-2"
-      aria-label={`Valoración ${value} de 10`}
+      aria-label={t("scoreIndicatorAria", { value })}
     >
       <div className="flex gap-[3px]" aria-hidden="true">
         {Array.from({ length: 10 }, (_, index) => (
@@ -36,6 +42,7 @@ export function AverageScore({
   fill,
   stroke,
 }: Readonly<{ values: readonly number[]; fill: string; stroke: string }>) {
+  const t = useTranslations("WheelForm");
   const total = values.reduce((sum, current) => sum + current, 0);
   const average = values.length > 0 ? total / values.length : 0;
   const roundedAverage = Math.round(average * 10) / 10;
@@ -44,10 +51,10 @@ export function AverageScore({
     <div className="flex items-center justify-between rounded-2xl border border-warm-200/80 bg-linear-to-r from-warm-50/90 to-warm-50/50 p-4 shadow-xs">
       <div className="flex flex-col gap-0.5">
         <span className="text-sm font-semibold tracking-tight text-warm-900">
-          Promedio general
+          {t("averageScore.label")}
         </span>
         <span className="text-[11px] font-medium text-warm-500/80">
-          sobre 10
+          {t("averageScore.overTen")}
         </span>
       </div>
 
@@ -68,7 +75,7 @@ export function AverageScore({
         <span
           className="min-w-12 text-right font-mono text-2xl font-bold tabular-nums tracking-tighter"
           style={{ color: stroke }}
-          aria-label={`Promedio ${roundedAverage} sobre 10`}
+          aria-label={t("averageScore.aria", { value: roundedAverage })}
         >
           {roundedAverage}
         </span>

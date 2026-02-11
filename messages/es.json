@@ -1,0 +1,162 @@
+{
+  "LayoutMetadata": {
+    "titleDefault": "Coaching Tools | Virtusway",
+    "titleTemplate": "%s | Coaching Tools",
+    "description": "Herramientas digitales para coaches profesionales. Genera ruedas de la vida, estudios DISC y mas."
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Rueda de la Vida",
+      "description": "Genera ruedas de la vida personalizadas para tus coachees. Elige entre las ruedas Personal, de Pareja o Profesional, ajusta las valoraciones y descarga el resultado en PDF."
+    },
+    "skipToMain": "Saltar al contenido principal",
+    "badge": "Virtusway · Herramienta de Coaching",
+    "title": "Rueda de la vida",
+    "description": "Genera ruedas de la vida personalizadas. Selecciona el tipo, ajusta las valoraciones y descarga el resultado en PDF.",
+    "footer": "Virtusway · Coaching Tools · {year}"
+  },
+  "LanguageSwitcher": {
+    "label": "Idioma",
+    "options": {
+      "es": "Espanol",
+      "en": "Ingles"
+    }
+  },
+  "WheelModel": {
+    "custom": {
+      "defaultTitle": "Mi Rueda Personalizada",
+      "defaultCategory": "Categoría {index}"
+    },
+    "labels": {
+      "personal": "Personal",
+      "pareja": "De Pareja",
+      "profesional": "Profesional",
+      "personalizada": "Personalizada"
+    },
+    "titles": {
+      "personal": "RUEDA DE LA VIDA PERSONAL",
+      "pareja": "RUEDA DE LA VIDA DE PAREJA",
+      "profesional": "RUEDA DE LA VIDA PROFESIONAL",
+      "personalizada": "RUEDA DE LA VIDA PERSONALIZADA"
+    },
+    "categories": {
+      "personal": {
+        "leisure": "Ocio",
+        "work": "Trabajo",
+        "mind": "Mente",
+        "friends": "Amigos",
+        "physical": "Fisico",
+        "finances": "Finanzas",
+        "ethics": "Ética/crecimiento espiritual",
+        "familyPartner": "Familia/Pareja"
+      },
+      "pareja": {
+        "leisure": "Ocio",
+        "living": "Convivencia",
+        "projects": "Proyectos en común",
+        "sexuality": "Sexualidad",
+        "environment": "Entorno",
+        "finances": "Finanzas",
+        "family": "Familia (hijos/padres)",
+        "affectionCommunication": "Afectividad/Comunicación"
+      },
+      "profesional": {
+        "teamRelations": "Relaciones equipo",
+        "innerLeadership": "Liderazgo interior",
+        "leadingOthers": "Liderazgo de otros",
+        "finances": "Finanzas",
+        "longTermVision": "Visión/objetivos a largo plazo",
+        "effectiveCommunication": "Comunicación efectiva",
+        "productEvaluation": "Evaluación productos",
+        "customerService": "Servicios atención cliente"
+      }
+    },
+    "colors": {
+      "terracotta": "Terracota",
+      "teal": "Verde azulado",
+      "pink": "Rosa",
+      "blue": "Azul",
+      "violet": "Violeta",
+      "amber": "Ámbar",
+      "emerald": "Esmeralda",
+      "indigo": "Indigo"
+    },
+    "validation": {
+      "coacheeNameRequired": "El nombre del coachee es obligatorio"
+    }
+  },
+  "WheelForm": {
+    "chart": {
+      "score": "Valoración"
+    },
+    "coacheeCard": {
+      "title": "Datos del Coachee",
+      "description": "Nombre y tipo de rueda a evaluar.",
+      "nameLabel": "Nombre del Coachee",
+      "namePlaceholder": "Ej: Maria Garcia...",
+      "wheelTypeLabel": "Tipo de Rueda",
+      "wheelTypePlaceholder": "Selecciona un tipo",
+      "editCustomWheel": "Editar rueda personalizada"
+    },
+    "ratingsCard": {
+      "title": "Valoraciones",
+      "description": "Ajusta cada categoría del 1 al 10.",
+      "range": "1 - 10",
+      "categoryScore": "{category}: {value}/10",
+      "sliderAria": "Valoración para {category}"
+    },
+    "scoreIndicatorAria": "Valoración {value} de 10",
+    "averageScore": {
+      "label": "Promedio general",
+      "overTen": "sobre 10",
+      "aria": "Promedio {value} sobre 10"
+    },
+    "scoreGrid": {
+      "empty": "No hay categorías disponibles para mostrar.",
+      "itemAria": "{category}: {value} sobre 10"
+    },
+    "notes": {
+      "label": "Notas de la sesión",
+      "placeholder": "Observaciones, reflexiones o comentarios sobre la sesión..."
+    },
+    "reset": {
+      "button": "Reiniciar Todo",
+      "dialogTitle": "Reiniciar la sesión actual",
+      "dialogDescription": "Vas a borrar el nombre, las valoraciones, las notas y la configuración personalizada. Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirm": "Reiniciar Todo"
+    },
+    "pdf": {
+      "coachee": "Coachee",
+      "date": "Fecha",
+      "chartCaptureError": "(No se pudo capturar el gráfico)",
+      "ratings": "Valoraciones",
+      "notes": "Notas",
+      "filePrefix": "rueda-vida",
+      "fileFallback": "coachee"
+    },
+    "export": {
+      "generating": "Generando PDF...",
+      "save": "Guardar en PDF"
+    }
+  },
+  "WheelCustomDialog": {
+    "title": "Configurar Rueda Personalizada",
+    "description": "Define el titulo, las categorías ({min}-{max}) y el color de tu rueda.",
+    "wheelTitleLabel": "Titulo de la Rueda",
+    "wheelTitlePlaceholder": "Ej: Rueda del Bienestar...",
+    "colorLabel": "Color",
+    "selectColorAria": "Seleccionar color {color}",
+    "categoriesLabel": "Categorías ({current}/{max})",
+    "addCategory": "Añadir",
+    "categoryPlaceholder": "Categoría {index}...",
+    "removeCategoryAria": "Eliminar categoría {index}",
+    "cancel": "Cancelar",
+    "save": "Guardar Configuración",
+    "validation": {
+      "titleRequired": "El titulo es obligatorio",
+      "categoryEmpty": "La categoría no puede estar vacía",
+      "categoryDuplicated": "Categoría duplicada"
+    }
+  }
+}

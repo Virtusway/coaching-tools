@@ -31,38 +31,41 @@ export interface CustomWheelConfig {
 export const MIN_CATEGORIES = 4;
 export const MAX_CATEGORIES = 12;
 
-const DEFAULT_CUSTOM_CATEGORIES = [
-  "Categoría 1",
-  "Categoría 2",
-  "Categoría 3",
-  "Categoría 4",
-  "Categoría 5",
-  "Categoría 6",
-  "Categoría 7",
-  "Categoría 8",
-];
+type ModelTranslator = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
 
-export function createDefaultCustomConfig(): CustomWheelConfig {
+const DEFAULT_CUSTOM_CATEGORY_COUNT = 8;
+
+export function createDefaultCustomConfig(t: ModelTranslator): CustomWheelConfig {
   return {
-    title: "Mi Rueda Personalizada",
-    categories: [...DEFAULT_CUSTOM_CATEGORIES],
+    title: t("custom.defaultTitle"),
+    categories: Array.from(
+      { length: DEFAULT_CUSTOM_CATEGORY_COUNT },
+      (_, index) => t("custom.defaultCategory", { index: index + 1 }),
+    ),
     colorIndex: 0,
   };
 }
 
-export const WHEEL_LABELS: Record<WheelType, string> = {
-  personal: "Personal",
-  pareja: "De Pareja",
-  profesional: "Profesional",
-  personalizada: "Personalizada",
-};
+export function getWheelLabels(t: ModelTranslator): Record<WheelType, string> {
+  return {
+    personal: t("labels.personal"),
+    pareja: t("labels.pareja"),
+    profesional: t("labels.profesional"),
+    personalizada: t("labels.personalizada"),
+  };
+}
 
-export const WHEEL_TITLES: Record<WheelType, string> = {
-  personal: "RUEDA DE LA VIDA PERSONAL",
-  pareja: "RUEDA DE LA VIDA DE PAREJA",
-  profesional: "RUEDA DE LA VIDA PROFESIONAL",
-  personalizada: "RUEDA DE LA VIDA PERSONALIZADA",
-};
+function getWheelTitles(t: ModelTranslator): Record<WheelType, string> {
+  return {
+    personal: t("titles.personal"),
+    pareja: t("titles.pareja"),
+    profesional: t("titles.profesional"),
+    personalizada: t("titles.personalizada"),
+  };
+}
 
 export const WHEEL_ICONS: Record<WheelType, LucideIcon> = {
   personal: PersonStandingIcon,
@@ -71,53 +74,76 @@ export const WHEEL_ICONS: Record<WheelType, LucideIcon> = {
   personalizada: SettingsIcon,
 };
 
-export const WHEEL_CATEGORIES: Record<PresetWheelType, readonly string[]> = {
-  personal: [
-    "Ocio",
-    "Trabajo",
-    "Mente",
-    "Amigos",
-    "Físico",
-    "Finanzas",
-    "Ética/crecimiento espiritual",
-    "Familia/Pareja",
-  ],
-  pareja: [
-    "Ocio",
-    "Convivencia",
-    "Proyectos en común",
-    "Sexualidad",
-    "Entorno",
-    "Finanzas",
-    "Familia (hijos/padres)",
-    "Afectividad/Comunicación",
-  ],
-  profesional: [
-    "Relaciones equipo",
-    "Liderazgo interior",
-    "Liderazgo de otros",
-    "Finanzas",
-    "Visión/objetivos a largo plazo",
-    "Comunicación efectiva",
-    "Evaluación productos",
-    "Servicios atención cliente",
-  ],
-};
+function getPresetWheelCategories(
+  t: ModelTranslator,
+): Record<PresetWheelType, readonly string[]> {
+  return {
+    personal: [
+      t("categories.personal.leisure"),
+      t("categories.personal.work"),
+      t("categories.personal.mind"),
+      t("categories.personal.friends"),
+      t("categories.personal.physical"),
+      t("categories.personal.finances"),
+      t("categories.personal.ethics"),
+      t("categories.personal.familyPartner"),
+    ],
+    pareja: [
+      t("categories.pareja.leisure"),
+      t("categories.pareja.living"),
+      t("categories.pareja.projects"),
+      t("categories.pareja.sexuality"),
+      t("categories.pareja.environment"),
+      t("categories.pareja.finances"),
+      t("categories.pareja.family"),
+      t("categories.pareja.affectionCommunication"),
+    ],
+    profesional: [
+      t("categories.profesional.teamRelations"),
+      t("categories.profesional.innerLeadership"),
+      t("categories.profesional.leadingOthers"),
+      t("categories.profesional.finances"),
+      t("categories.profesional.longTermVision"),
+      t("categories.profesional.effectiveCommunication"),
+      t("categories.profesional.productEvaluation"),
+      t("categories.profesional.customerService"),
+    ],
+  };
+}
 
 export const COLOR_PRESETS = [
-  { name: "Terracota", fill: "hsl(20 60% 55%)", stroke: "hsl(20 65% 42%)" },
-  { name: "Teal", fill: "hsl(172 50% 45%)", stroke: "hsl(172 55% 35%)" },
-  { name: "Rosa", fill: "hsl(350 60% 55%)", stroke: "hsl(350 65% 42%)" },
-  { name: "Azul", fill: "hsl(221 65% 50%)", stroke: "hsl(221 70% 38%)" },
-  { name: "Violeta", fill: "hsl(270 55% 55%)", stroke: "hsl(270 60% 42%)" },
-  { name: "Ámbar", fill: "hsl(38 70% 50%)", stroke: "hsl(38 75% 38%)" },
   {
-    name: "Esmeralda",
+    id: "terracotta",
+    fill: "hsl(20 60% 55%)",
+    stroke: "hsl(20 65% 42%)",
+  },
+  { id: "teal", fill: "hsl(172 50% 45%)", stroke: "hsl(172 55% 35%)" },
+  { id: "pink", fill: "hsl(350 60% 55%)", stroke: "hsl(350 65% 42%)" },
+  { id: "blue", fill: "hsl(221 65% 50%)", stroke: "hsl(221 70% 38%)" },
+  {
+    id: "violet",
+    fill: "hsl(270 55% 55%)",
+    stroke: "hsl(270 60% 42%)",
+  },
+  { id: "amber", fill: "hsl(38 70% 50%)", stroke: "hsl(38 75% 38%)" },
+  {
+    id: "emerald",
     fill: "hsl(155 55% 42%)",
     stroke: "hsl(155 60% 32%)",
   },
-  { name: "Índigo", fill: "hsl(240 55% 55%)", stroke: "hsl(240 60% 42%)" },
+  {
+    id: "indigo",
+    fill: "hsl(240 55% 55%)",
+    stroke: "hsl(240 60% 42%)",
+  },
 ] as const;
+
+export function getColorPresetLabel(
+  presetId: (typeof COLOR_PRESETS)[number]["id"],
+  t: ModelTranslator,
+): string {
+  return t(`colors.${presetId}`);
+}
 
 function getColorFromPreset(colorIndex: number): WheelColor {
   const preset = COLOR_PRESETS[colorIndex] ?? COLOR_PRESETS[0];
@@ -141,21 +167,25 @@ export type WheelPresentation = {
 export function getWheelPresentation(
   wheelType: WheelType,
   customConfig: CustomWheelConfig,
+  t: ModelTranslator,
 ): WheelPresentation {
+  const wheelTitles = getWheelTitles(t);
+
   if (wheelType === "personalizada") {
     return {
       isCustom: true,
-      title:
-        customConfig.title.trim().toUpperCase() || WHEEL_TITLES.personalizada,
+      title: customConfig.title.trim().toLocaleUpperCase() || wheelTitles.personalizada,
       categories: customConfig.categories,
       colors: getColorFromPreset(customConfig.colorIndex),
     };
   }
 
+  const presetWheelCategories = getPresetWheelCategories(t);
+
   return {
     isCustom: false,
-    title: WHEEL_TITLES[wheelType],
-    categories: WHEEL_CATEGORIES[wheelType],
+    title: wheelTitles[wheelType],
+    categories: presetWheelCategories[wheelType],
     colors: WHEEL_COLORS[wheelType],
   };
 }
@@ -169,23 +199,27 @@ export function createDefaultScores(
   });
 }
 
-export const formSchema = z.object({
-  coacheeName: z.string().min(1, "El nombre del coachee es obligatorio"),
-  wheelType: z.enum(WHEEL_TYPES),
-  values: z
-    .array(z.number().min(1).max(10))
-    .min(MIN_CATEGORIES)
-    .max(MAX_CATEGORIES),
-  notes: z.string().optional(),
-});
+export function createFormSchema(t: ModelTranslator) {
+  return z.object({
+    coacheeName: z.string().min(1, t("validation.coacheeNameRequired")),
+    wheelType: z.enum(WHEEL_TYPES),
+    values: z
+      .array(z.number().min(1).max(10))
+      .min(MIN_CATEGORIES)
+      .max(MAX_CATEGORIES),
+    notes: z.string().optional(),
+  });
+}
 
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
-export function createInitialFormValues(): FormValues {
+export function createInitialFormValues(t: ModelTranslator): FormValues {
+  const presetWheelCategories = getPresetWheelCategories(t);
+
   return {
     coacheeName: "",
     wheelType: "personal",
-    values: createDefaultScores(WHEEL_CATEGORIES.personal.length),
+    values: createDefaultScores(presetWheelCategories.personal.length),
     notes: "",
   };
 }

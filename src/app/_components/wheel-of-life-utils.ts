@@ -1,12 +1,6 @@
 const HSL_PATTERN =
   /hsl\((\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%\)/;
 
-const SPANISH_DATE_FORMATTER = new Intl.DateTimeFormat("es-ES", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
-
 export function splitTickLabel(rawValue: string, maxLength = 14): string[] {
   const splitBySlash = rawValue.split("/").flatMap((part) => {
     const trimmed = part.trim();
@@ -162,11 +156,19 @@ export function hslToRgb(hsl: string): { r: number; g: number; b: number } {
   };
 }
 
-export function formatSpanishDate(date = new Date()): string {
-  return SPANISH_DATE_FORMATTER.format(date);
+export function formatDateForLocale(locale: string, date = new Date()): string {
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
 }
 
-export function createPdfFilename(name: string): string {
+export function createPdfFilename(
+  name: string,
+  filePrefix: string,
+  fallbackName: string,
+): string {
   const normalizedName = name
     .trim()
     .toLowerCase()
@@ -175,5 +177,10 @@ export function createPdfFilename(name: string): string {
     .replaceAll(/\s+/g, "-")
     .replaceAll(/[^a-z0-9-]/g, "");
 
-  return `rueda-vida-${normalizedName || "coachee"}.pdf`;
+  const normalizedPrefix = filePrefix.replaceAll(/[^a-z0-9-]/g, "");
+  const normalizedFallback = fallbackName.replaceAll(/[^a-z0-9-]/g, "");
+  const safePrefix = normalizedPrefix || "report";
+  const safeFallback = normalizedFallback || "coachee";
+
+  return `${safePrefix}-${normalizedName || safeFallback}.pdf`;
 }

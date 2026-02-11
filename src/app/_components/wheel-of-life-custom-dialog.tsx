@@ -12,10 +12,12 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PlusIcon, TrashIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { CustomWheelConfig } from "./wheel-of-life-model";
 import {
   COLOR_PRESETS,
+  getColorPresetLabel,
   MAX_CATEGORIES,
   MIN_CATEGORIES,
 } from "./wheel-of-life-model";
@@ -27,25 +29,28 @@ type CustomDialogProps = {
   onSave: (config: CustomWheelConfig) => void;
 };
 
-function validateDraft(config: CustomWheelConfig): Record<string, string> {
+function validateDraft(
+  config: CustomWheelConfig,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): Record<string, string> {
   const errors: Record<string, string> = {};
 
   if (!config.title.trim()) {
-    errors.title = "El título es obligatorio";
+    errors.title = t("validation.titleRequired");
   }
 
   const emptyCategoryIndex = config.categories.findIndex(
     (category) => !category.trim(),
   );
   if (emptyCategoryIndex >= 0) {
-    errors[`cat-${emptyCategoryIndex}`] = "La categoría no puede estar vacía";
+    errors[`cat-${emptyCategoryIndex}`] = t("validation.categoryEmpty");
   }
 
   const seenCategories = new Set<string>();
   for (let index = 0; index < config.categories.length; index++) {
     const normalizedCategory = config.categories[index].trim().toLowerCase();
     if (seenCategories.has(normalizedCategory)) {
-      errors[`cat-${index}`] = "Categoría duplicada";
+      errors[`cat-${index}`] = t("validation.categoryDuplicated");
       break;
     }
 
@@ -61,6 +66,8 @@ export default function WheelOfLifeCustomDialog({
   config,
   onSave,
 }: Readonly<CustomDialogProps>) {
+  const t = useTranslations("WheelCustomDialog");
+  const tModel = useTranslations("WheelModel");
   const [draft, setDraft] = useState<CustomWheelConfig>(config);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -81,7 +88,7 @@ export default function WheelOfLifeCustomDialog({
       ...current,
       categories: [
         ...current.categories,
-        `Categoría ${current.categories.length + 1}`,
+        tModel("custom.defaultCategory", { index: current.categories.length + 1 }),
       ],
     }));
   };
@@ -100,7 +107,7 @@ export default function WheelOfLifeCustomDialog({
   };
 
   const handleSave = () => {
-    const validationErrors = validateDraft(draft);
+    const validationErrors = validateDraft(draft, t);
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -121,17 +128,16 @@ export default function WheelOfLifeCustomDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-warm-900">
-            Configurar Rueda Personalizada
+            {t("title")}
           </DialogTitle>
           <DialogDescription className="text-warm-500">
-            Define el título, las categorías ({MIN_CATEGORIES}–{MAX_CATEGORIES})
-            y el color de tu rueda.
+            {t("description", { min: MIN_CATEGORIES, max: MAX_CATEGORIES })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-2">
           <Field data-invalid={Boolean(errors.title)}>
-            <FieldLabel htmlFor="custom-title">Título de la Rueda</FieldLabel>
+            <FieldLabel htmlFor="custom-title">{t("wheelTitleLabel")}</FieldLabel>
             <Input
               id="custom-title"
               name="custom-title"
@@ -142,7 +148,7 @@ export default function WheelOfLifeCustomDialog({
                   title: event.target.value,
                 }));
               }}
-              placeholder="Ej: Rueda del Bienestar…"
+              placeholder={t("wheelTitlePlaceholder")}
               autoComplete="off"
               className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
               aria-invalid={Boolean(errors.title)}
@@ -156,7 +162,7 @@ export default function WheelOfLifeCustomDialog({
           </Field>
 
           <div>
-            <FieldLabel>Color</FieldLabel>
+            <FieldLabel>{t("colorLabel")}</FieldLabel>
 
             <div className="mt-2 flex flex-wrap gap-2">
               {COLOR_PRESETS.map((preset, index) => {
@@ -164,7 +170,7 @@ export default function WheelOfLifeCustomDialog({
 
                 return (
                   <button
-                    key={preset.name}
+                    key={preset.id}
                     type="button"
                     onClick={() => {
                       setDraft((current) => ({
@@ -180,8 +186,10 @@ export default function WheelOfLifeCustomDialog({
                         ? `0 0 0 2px ${preset.fill}40`
                         : "none",
                     }}
-                    title={preset.name}
-                    aria-label={`Seleccionar color ${preset.name}`}
+                    title={getColorPresetLabel(preset.id, tModel)}
+                    aria-label={t("selectColorAria", {
+                      color: getColorPresetLabel(preset.id, tModel),
+                    })}
                     aria-pressed={isSelected}
                   >
                     {isSelected && (
@@ -199,7 +207,10 @@ export default function WheelOfLifeCustomDialog({
           <div>
             <div className="flex items-center justify-between">
               <FieldLabel>
-                Categorías ({draft.categories.length}/{MAX_CATEGORIES})
+                {t("categoriesLabel", {
+                  current: draft.categories.length,
+                  max: MAX_CATEGORIES,
+                })}
               </FieldLabel>
 
               <Button
@@ -211,7 +222,7 @@ export default function WheelOfLifeCustomDialog({
                 className="touch-manipulation gap-1 text-warm-500 hover:text-warm-700"
               >
                 <PlusIcon className="size-3.5" aria-hidden="true" />
-                Añadir
+                {t("addCategory")}
               </Button>
             </div>
 
@@ -231,7 +242,9 @@ export default function WheelOfLifeCustomDialog({
                       onChange={(event) => {
                         updateCategory(index, event.target.value);
                       }}
-                      placeholder={`Categoría ${index + 1}…`}
+                      placeholder={t("categoryPlaceholder", {
+                        index: index + 1,
+                      })}
                       autoComplete="off"
                       className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
                       aria-invalid={Boolean(error)}
@@ -246,7 +259,7 @@ export default function WheelOfLifeCustomDialog({
                       }}
                       disabled={draft.categories.length <= MIN_CATEGORIES}
                       className="touch-manipulation size-8 shrink-0 text-warm-400 hover:text-destructive"
-                      aria-label={`Eliminar categoría ${index + 1}`}
+                      aria-label={t("removeCategoryAria", { index: index + 1 })}
                     >
                       <TrashIcon className="size-3.5" aria-hidden="true" />
                     </Button>
@@ -275,7 +288,7 @@ export default function WheelOfLifeCustomDialog({
             }}
             className="border-warm-200 text-warm-600"
           >
-            Cancelar
+            {t("cancel")}
           </Button>
 
           <Button
@@ -283,7 +296,7 @@ export default function WheelOfLifeCustomDialog({
             onClick={handleSave}
             className="bg-warm-800 text-warm-50 hover:bg-warm-900"
           >
-            Guardar Configuración
+            {t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

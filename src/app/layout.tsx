@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { DM_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -20,31 +22,39 @@ const jetBrainsMono = JetBrains_Mono({
   weight: ["400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Coaching Tools | Virtusway",
-    template: "%s | Coaching Tools",
-  },
-  description:
-    "Herramientas digitales para coaches profesionales. Genera ruedas de la vida, estudios DISC y más.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("LayoutMetadata");
+
+  return {
+    title: {
+      default: t("titleDefault"),
+      template: t("titleTemplate"),
+    },
+    description: t("description"),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f6f2ed",
   colorScheme: "light dark",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="es">
+    <html lang={locale}>
       <body
         className={`${dmSans.variable} ${dmSerif.variable} ${jetBrainsMono.variable} min-h-screen antialiased`}
       >
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

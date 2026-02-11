@@ -1,0 +1,162 @@
+{
+  "LayoutMetadata": {
+    "titleDefault": "Coaching Tools | Virtusway",
+    "titleTemplate": "%s | Coaching Tools",
+    "description": "Digital tools for professional coaches. Generate wheel of life charts, DISC assessments and more."
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Wheel of Life",
+      "description": "Generate personalized wheel of life charts for your coachees. Choose Personal, Couples or Professional wheel types, adjust scores and download the result as PDF."
+    },
+    "skipToMain": "Skip to main content",
+    "badge": "Virtusway · Coaching Tool",
+    "title": "Wheel of life",
+    "description": "Generate personalized wheel of life charts. Pick the type, adjust the ratings and download the result as PDF.",
+    "footer": "Virtusway · Coaching Tools · {year}"
+  },
+  "LanguageSwitcher": {
+    "label": "Language",
+    "options": {
+      "es": "Spanish",
+      "en": "English"
+    }
+  },
+  "WheelModel": {
+    "custom": {
+      "defaultTitle": "My Custom Wheel",
+      "defaultCategory": "Category {index}"
+    },
+    "labels": {
+      "personal": "Personal",
+      "pareja": "Couples",
+      "profesional": "Professional",
+      "personalizada": "Custom"
+    },
+    "titles": {
+      "personal": "PERSONAL WHEEL OF LIFE",
+      "pareja": "COUPLES WHEEL OF LIFE",
+      "profesional": "PROFESSIONAL WHEEL OF LIFE",
+      "personalizada": "CUSTOM WHEEL OF LIFE"
+    },
+    "categories": {
+      "personal": {
+        "leisure": "Leisure",
+        "work": "Work",
+        "mind": "Mind",
+        "friends": "Friends",
+        "physical": "Physical",
+        "finances": "Finances",
+        "ethics": "Ethics/spiritual growth",
+        "familyPartner": "Family/Partner"
+      },
+      "pareja": {
+        "leisure": "Leisure",
+        "living": "Living together",
+        "projects": "Shared projects",
+        "sexuality": "Sexuality",
+        "environment": "Environment",
+        "finances": "Finances",
+        "family": "Family (children/parents)",
+        "affectionCommunication": "Affection/Communication"
+      },
+      "profesional": {
+        "teamRelations": "Team relationships",
+        "innerLeadership": "Inner leadership",
+        "leadingOthers": "Leading others",
+        "finances": "Finances",
+        "longTermVision": "Long-term vision/goals",
+        "effectiveCommunication": "Effective communication",
+        "productEvaluation": "Product evaluation",
+        "customerService": "Customer service"
+      }
+    },
+    "colors": {
+      "terracotta": "Terracotta",
+      "teal": "Teal",
+      "pink": "Pink",
+      "blue": "Blue",
+      "violet": "Violet",
+      "amber": "Amber",
+      "emerald": "Emerald",
+      "indigo": "Indigo"
+    },
+    "validation": {
+      "coacheeNameRequired": "The coachee name is required"
+    }
+  },
+  "WheelForm": {
+    "chart": {
+      "score": "Rating"
+    },
+    "coacheeCard": {
+      "title": "Coachee Details",
+      "description": "Name and wheel type to evaluate.",
+      "nameLabel": "Coachee Name",
+      "namePlaceholder": "Ex: Maria Garcia...",
+      "wheelTypeLabel": "Wheel Type",
+      "wheelTypePlaceholder": "Select a type",
+      "editCustomWheel": "Edit custom wheel"
+    },
+    "ratingsCard": {
+      "title": "Ratings",
+      "description": "Adjust each category from 1 to 10.",
+      "range": "1 - 10",
+      "categoryScore": "{category}: {value}/10",
+      "sliderAria": "Rating for {category}"
+    },
+    "scoreIndicatorAria": "Rating {value} out of 10",
+    "averageScore": {
+      "label": "Overall average",
+      "overTen": "out of 10",
+      "aria": "Average {value} out of 10"
+    },
+    "scoreGrid": {
+      "empty": "No categories available to display.",
+      "itemAria": "{category}: {value} out of 10"
+    },
+    "notes": {
+      "label": "Session notes",
+      "placeholder": "Observations, reflections or comments about the session..."
+    },
+    "reset": {
+      "button": "Reset all",
+      "dialogTitle": "Reset current session",
+      "dialogDescription": "You are about to clear the name, ratings, notes and custom configuration. This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Reset all"
+    },
+    "pdf": {
+      "coachee": "Coachee",
+      "date": "Date",
+      "chartCaptureError": "(Could not capture chart)",
+      "ratings": "Ratings",
+      "notes": "Notes",
+      "filePrefix": "wheel-of-life",
+      "fileFallback": "coachee"
+    },
+    "export": {
+      "generating": "Generating PDF...",
+      "save": "Save as PDF"
+    }
+  },
+  "WheelCustomDialog": {
+    "title": "Configure Custom Wheel",
+    "description": "Set the title, categories ({min}-{max}) and color for your wheel.",
+    "wheelTitleLabel": "Wheel title",
+    "wheelTitlePlaceholder": "Ex: Wellness Wheel...",
+    "colorLabel": "Color",
+    "selectColorAria": "Select color {color}",
+    "categoriesLabel": "Categories ({current}/{max})",
+    "addCategory": "Add",
+    "categoryPlaceholder": "Category {index}...",
+    "removeCategoryAria": "Remove category {index}",
+    "cancel": "Cancel",
+    "save": "Save configuration",
+    "validation": {
+      "titleRequired": "Title is required",
+      "categoryEmpty": "Category cannot be empty",
+      "categoryDuplicated": "Duplicate category"
+    }
+  }
+}

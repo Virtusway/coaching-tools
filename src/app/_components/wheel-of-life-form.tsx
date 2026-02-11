@@ -51,6 +51,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { jsPDF } from "jspdf";
 import { Download, PencilIcon, RotateCcw, UserIcon } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
@@ -63,13 +64,13 @@ import {
 import WheelOfLifeCustomDialog from "./wheel-of-life-custom-dialog";
 import { AverageScore, ScoreIndicator } from "./wheel-of-life-metrics";
 import {
+  createFormSchema,
   createDefaultCustomConfig,
   createDefaultScores,
   createInitialFormValues,
-  formSchema,
+  getWheelLabels,
   getWheelPresentation,
   WHEEL_ICONS,
-  WHEEL_LABELS,
   WHEEL_TYPES,
   type CustomWheelConfig,
   type FormValues,
@@ -78,7 +79,7 @@ import {
 import WheelScoreGrid from "./wheel-of-life-score-grid";
 import {
   createPdfFilename,
-  formatSpanishDate,
+  formatDateForLocale,
   hslToRgb,
   splitTickLabel,
   svgToDataUrl,
@@ -122,6 +123,10 @@ function CustomAngleTick({
 }
 
 export default function WheelOfLifeForm() {
+  const locale = useLocale();
+  const t = useTranslations("WheelForm");
+  const tModel = useTranslations("WheelModel");
+
   const chartRef = useRef<HTMLDivElement>(null);
   const previousWheelTypeRef = useRef<WheelType>("personal");
 
@@ -129,12 +134,18 @@ export default function WheelOfLifeForm() {
   const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
   const [isCustomConfigured, setIsCustomConfigured] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  const [customConfig, setCustomConfig] = useState(createDefaultCustomConfig);
+  const [customConfig, setCustomConfig] = useState<CustomWheelConfig>(() =>
+    createDefaultCustomConfig(tModel),
+  );
+
+  const formSchema = useMemo(() => createFormSchema(tModel), [tModel]);
+  const initialFormValues = useMemo(() => createInitialFormValues(tModel), [tModel]);
+  const wheelLabels = useMemo(() => getWheelLabels(tModel), [tModel]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
-    defaultValues: createInitialFormValues(),
+    defaultValues: initialFormValues,
   });
 
   const wheelType =
@@ -143,17 +154,25 @@ export default function WheelOfLifeForm() {
   const coacheeName = useWatch({ control: form.control, name: "coacheeName" });
 
   const wheelPresentation = useMemo(() => {
-    return getWheelPresentation(wheelType, customConfig);
-  }, [customConfig, wheelType]);
+    return getWheelPresentation(wheelType, customConfig, tModel);
+  }, [customConfig, tModel, wheelType]);
 
   const chartConfig: ChartConfig = useMemo(() => {
     return {
       value: {
-        label: "Valoración",
+        label: t("chart.score"),
         color: wheelPresentation.colors.fill,
       },
     };
-  }, [wheelPresentation.colors.fill]);
+  }, [t, wheelPresentation.colors.fill]);
+
+  useEffect(() => {
+    if (isCustomConfigured) {
+      return;
+    }
+
+    setCustomConfig(createDefaultCustomConfig(tModel));
+  }, [isCustomConfigured, tModel]);
 
   const chartData = useMemo(() => {
     const scores = values ?? [];
@@ -216,8 +235,8 @@ export default function WheelOfLifeForm() {
   );
 
   const resetForm = () => {
-    form.reset(createInitialFormValues());
-    setCustomConfig(createDefaultCustomConfig());
+    form.reset(createInitialFormValues(tModel));
+    setCustomConfig(createDefaultCustomConfig(tModel));
     setIsCustomConfigured(false);
     setIsCustomDialogOpen(false);
     previousWheelTypeRef.current = "personal";
@@ -239,7 +258,7 @@ export default function WheelOfLifeForm() {
         values,
         notes,
       } = form.getValues();
-      const presentation = getWheelPresentation(selectedType, customConfig);
+      const presentation = getWheelPresentation(selectedType, customConfig, tModel);
 
       const pdf = new jsPDF("portrait", "mm", "a4");
       const pageWidth = 210;
@@ -250,10 +269,12 @@ export default function WheelOfLifeForm() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(12);
-      pdf.text(`Coachee: ${name}`, pageWidth / 2, 32, { align: "center" });
+      pdf.text(`${t("pdf.coachee")}: ${name}`, pageWidth / 2, 32, {
+        align: "center",
+      });
 
       pdf.setFontSize(10);
-      pdf.text(`Fecha: ${formatSpanishDate()}`, pageWidth / 2, 39, {
+      pdf.text(`${t("pdf.date")}: ${formatDateForLocale(locale)}`, pageWidth / 2, 39, {
         align: "center",
       });
 
@@ -266,7 +287,7 @@ export default function WheelOfLifeForm() {
         } catch {
           pdf.setFontSize(10);
           pdf.setTextColor(150);
-          pdf.text("(No se pudo capturar el gráfico)", pageWidth / 2, 110, {
+          pdf.text(t("pdf.chartCaptureError"), pageWidth / 2, 110, {
             align: "center",
           });
           pdf.setTextColor(0);
@@ -276,7 +297,7 @@ export default function WheelOfLifeForm() {
       const tableY = 182;
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
-      pdf.text("Valoraciones:", 25, tableY);
+      pdf.text(`${t("pdf.ratings")}:`, 25, tableY);
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
@@ -313,7 +334,7 @@ export default function WheelOfLifeForm() {
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(12);
-      pdf.text("Notas:", 25, notesY);
+      pdf.text(`${t("pdf.notes")}:`, 25, notesY);
 
       if (notesValue) {
         pdf.setFont("helvetica", "normal");
@@ -328,11 +349,17 @@ export default function WheelOfLifeForm() {
         }
       }
 
-      pdf.save(createPdfFilename(name));
+      pdf.save(
+        createPdfFilename(
+          name,
+          t("pdf.filePrefix"),
+          t("pdf.fileFallback"),
+        ),
+      );
     } finally {
       setIsExporting(false);
     }
-  }, [customConfig, form]);
+  }, [customConfig, form, locale, t, tModel]);
 
   return (
     <TooltipProvider>
@@ -355,10 +382,10 @@ export default function WheelOfLifeForm() {
 
                 <div>
                   <CardTitle className="text-warm-900">
-                    Datos del Coachee
+                    {t("coacheeCard.title")}
                   </CardTitle>
                   <CardDescription className="text-warm-500">
-                    Nombre y tipo de rueda a evaluar.
+                    {t("coacheeCard.description")}
                   </CardDescription>
                 </div>
               </div>
@@ -376,7 +403,7 @@ export default function WheelOfLifeForm() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name}>
-                          Nombre del Coachee
+                          {t("coacheeCard.nameLabel")}
                         </FieldLabel>
 
                         <Input
@@ -384,7 +411,7 @@ export default function WheelOfLifeForm() {
                           id={field.name}
                           name="coacheeName"
                           aria-invalid={fieldState.invalid}
-                          placeholder="Ej: María García…"
+                          placeholder={t("coacheeCard.namePlaceholder")}
                           autoComplete="off"
                           className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
                         />
@@ -402,7 +429,7 @@ export default function WheelOfLifeForm() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="wheelType">
-                          Tipo de Rueda
+                          {t("coacheeCard.wheelTypeLabel")}
                         </FieldLabel>
 
                         <div className="flex gap-2">
@@ -421,7 +448,9 @@ export default function WheelOfLifeForm() {
                               className="w-full cursor-pointer border-warm-200 bg-warm-50/50"
                               aria-invalid={fieldState.invalid}
                             >
-                              <SelectValue placeholder="Selecciona un tipo" />
+                              <SelectValue
+                                placeholder={t("coacheeCard.wheelTypePlaceholder")}
+                              />
                             </SelectTrigger>
 
                             <SelectContent>
@@ -435,7 +464,7 @@ export default function WheelOfLifeForm() {
                                         className="size-4"
                                         aria-hidden="true"
                                       />
-                                      {WHEEL_LABELS[type]}
+                                      {wheelLabels[type]}
                                     </span>
                                   </SelectItem>
                                 );
@@ -454,7 +483,7 @@ export default function WheelOfLifeForm() {
                                     setIsCustomDialogOpen(true);
                                   }}
                                   className="touch-manipulation shrink-0 border-warm-200 text-warm-500 hover:border-warm-300 hover:text-warm-700"
-                                  aria-label="Editar rueda personalizada"
+                                  aria-label={t("coacheeCard.editCustomWheel")}
                                 >
                                   <PencilIcon
                                     className="size-4"
@@ -464,7 +493,7 @@ export default function WheelOfLifeForm() {
                               </TooltipTrigger>
 
                               <TooltipContent>
-                                Editar rueda personalizada
+                                {t("coacheeCard.editCustomWheel")}
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -485,9 +514,11 @@ export default function WheelOfLifeForm() {
             <CardHeader>
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-warm-900">Valoraciones</CardTitle>
+                  <CardTitle className="text-warm-900">
+                    {t("ratingsCard.title")}
+                  </CardTitle>
                   <CardDescription className="text-warm-500">
-                    Ajusta cada categoría del 1 al 10.
+                    {t("ratingsCard.description")}
                   </CardDescription>
                 </div>
 
@@ -495,7 +526,7 @@ export default function WheelOfLifeForm() {
                   variant="outline"
                   className="border-warm-300/80 bg-warm-50/80 font-mono text-[11px] text-warm-500"
                 >
-                  1 – 10
+                  {t("ratingsCard.range")}
                 </Badge>
               </div>
             </CardHeader>
@@ -522,7 +553,10 @@ export default function WheelOfLifeForm() {
                               </TooltipTrigger>
 
                               <TooltipContent>
-                                {category}: {currentValue}/10
+                                {t("ratingsCard.categoryScore", {
+                                  category,
+                                  value: currentValue,
+                                })}
                               </TooltipContent>
                             </Tooltip>
 
@@ -546,7 +580,7 @@ export default function WheelOfLifeForm() {
                                 "--slider-color": wheelPresentation.colors.fill,
                               } as React.CSSProperties
                             }
-                            aria-label={`Valoración para ${category}`}
+                            aria-label={t("ratingsCard.sliderAria", { category })}
                           />
                         </div>
                       );
@@ -573,14 +607,14 @@ export default function WheelOfLifeForm() {
                 render={({ field }) => (
                   <Field>
                     <FieldLabel htmlFor={field.name}>
-                      Notas de la sesión
+                      {t("notes.label")}
                     </FieldLabel>
 
                     <Textarea
                       {...field}
                       id={field.name}
                       name="notes"
-                      placeholder="Observaciones, reflexiones o comentarios sobre la sesión…"
+                      placeholder={t("notes.placeholder")}
                       rows={4}
                       autoComplete="off"
                       className="resize-none border-warm-200 bg-warm-50/30 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
@@ -602,29 +636,27 @@ export default function WheelOfLifeForm() {
                       className="touch-manipulation gap-2 text-warm-500 hover:bg-warm-100 hover:text-warm-700"
                     >
                       <RotateCcw className="size-3.5" aria-hidden="true" />
-                      Reiniciar Todo
+                      {t("reset.button")}
                     </Button>
                   </AlertDialogTrigger>
 
                   <AlertDialogContent className="border-warm-200">
                     <AlertDialogHeader>
                       <AlertDialogTitle>
-                        Reiniciar la sesión actual
+                        {t("reset.dialogTitle")}
                       </AlertDialogTitle>
                       <AlertDialogDescription>
-                        Vas a borrar el nombre, las valoraciones, las notas y la
-                        configuración personalizada. Esta acción no se puede
-                        deshacer.
+                        {t("reset.dialogDescription")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
 
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogCancel>{t("reset.cancel")}</AlertDialogCancel>
                       <AlertDialogAction
                         variant="destructive"
                         onClick={resetForm}
                       >
-                        Reiniciar Todo
+                        {t("reset.confirm")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -679,7 +711,7 @@ export default function WheelOfLifeForm() {
                     <ChartTooltip content={<ChartTooltipContent hideLabel />} />
 
                     <Radar
-                      name="Valoración"
+                      name={t("chart.score")}
                       dataKey="value"
                       stroke={wheelPresentation.colors.stroke}
                       fill={wheelPresentation.colors.fill}
@@ -713,7 +745,7 @@ export default function WheelOfLifeForm() {
             disabled={!coacheeName?.trim() || isExporting}
           >
             <Download className="size-4" aria-hidden="true" />
-            {isExporting ? "Generando PDF…" : "Guardar en PDF"}
+            {isExporting ? t("export.generating") : t("export.save")}
           </Button>
         </div>
       </div>

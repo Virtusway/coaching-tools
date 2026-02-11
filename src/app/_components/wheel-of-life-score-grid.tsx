@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 type WheelScoreGridProps = {
   categories: readonly string[];
   values: readonly number[];
@@ -13,10 +17,12 @@ export default function WheelScoreGrid({
   values,
   strokeColor,
 }: Readonly<WheelScoreGridProps>) {
+  const t = useTranslations("WheelForm");
+
   if (categories.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-warm-300/60 bg-warm-50/40 px-5 py-4 text-center text-sm text-warm-500">
-        No hay categorías disponibles para mostrar.
+        {t("scoreGrid.empty")}
       </div>
     );
   }
@@ -54,7 +60,7 @@ export default function WheelScoreGrid({
                 <div
                   className="mt-1 font-mono text-xl font-bold tabular-nums leading-tight"
                   style={{ color: strokeColor }}
-                  aria-label={`${category}: ${value} sobre 10`}
+                  aria-label={t("scoreGrid.itemAria", { category, value })}
                 >
                   {value}
                 </div>
