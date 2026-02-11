@@ -16,6 +16,14 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Field,
   FieldError,
   FieldGroup,
@@ -43,8 +51,12 @@ import {
   BriefcaseIcon,
   Download,
   HeartIcon,
+  PencilIcon,
   PersonStandingIcon,
+  PlusIcon,
   RotateCcw,
+  SettingsIcon,
+  TrashIcon,
   UserIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -58,30 +70,32 @@ import {
 } from "recharts";
 import * as z from "zod";
 
-// ── Wheel type definitions ──────────────────────────────────────────────
-
-const WHEEL_TYPES = ["personal", "pareja", "profesional"] as const;
+const PRESET_WHEEL_TYPES = ["personal", "pareja", "profesional"] as const;
+const WHEEL_TYPES = [...PRESET_WHEEL_TYPES, "personalizada"] as const;
 type WheelType = (typeof WHEEL_TYPES)[number];
 
 const WHEEL_LABELS: Record<WheelType, string> = {
   personal: "Personal",
   pareja: "De Pareja",
   profesional: "Profesional",
+  personalizada: "Personalizada",
 };
 
-const WHEEL_TITLES: Record<WheelType, string> = {
+const WHEEL_TITLES: Record<string, string> = {
   personal: "RUEDA DE LA VIDA PERSONAL",
   pareja: "RUEDA DE LA VIDA DE PAREJA",
   profesional: "RUEDA DE LA VIDA PROFESIONAL",
+  personalizada: "RUEDA DE LA VIDA PERSONALIZADA",
 };
 
 const WHEEL_ICONS: Record<WheelType, React.ReactNode> = {
   personal: <PersonStandingIcon className="size-4" />,
   pareja: <HeartIcon className="size-4" />,
   profesional: <BriefcaseIcon className="size-4" />,
+  personalizada: <SettingsIcon className="size-4" />,
 };
 
-const WHEEL_CATEGORIES: Record<WheelType, readonly string[]> = {
+const WHEEL_CATEGORIES: Record<string, readonly string[]> = {
   personal: [
     "Ocio",
     "Trabajo",
@@ -114,26 +128,61 @@ const WHEEL_CATEGORIES: Record<WheelType, readonly string[]> = {
   ],
 };
 
-const WHEEL_COLORS: Record<WheelType, { fill: string; stroke: string }> = {
+const COLOR_PRESETS = [
+  { name: "Terracota", fill: "hsl(20 60% 55%)", stroke: "hsl(20 65% 42%)" },
+  { name: "Teal", fill: "hsl(172 50% 45%)", stroke: "hsl(172 55% 35%)" },
+  { name: "Rosa", fill: "hsl(350 60% 55%)", stroke: "hsl(350 65% 42%)" },
+  { name: "Azul", fill: "hsl(221 65% 50%)", stroke: "hsl(221 70% 38%)" },
+  { name: "Violeta", fill: "hsl(270 55% 55%)", stroke: "hsl(270 60% 42%)" },
+  { name: "Ámbar", fill: "hsl(38 70% 50%)", stroke: "hsl(38 75% 38%)" },
+  { name: "Esmeralda", fill: "hsl(155 55% 42%)", stroke: "hsl(155 60% 32%)" },
+  { name: "Índigo", fill: "hsl(240 55% 55%)", stroke: "hsl(240 60% 42%)" },
+] as const;
+
+const WHEEL_COLORS: Record<string, { fill: string; stroke: string }> = {
   personal: { fill: "hsl(172 50% 45%)", stroke: "hsl(172 55% 35%)" },
   pareja: { fill: "hsl(350 60% 55%)", stroke: "hsl(350 65% 42%)" },
   profesional: { fill: "hsl(221 65% 50%)", stroke: "hsl(221 70% 38%)" },
+  personalizada: COLOR_PRESETS[0].fill
+    ? { fill: COLOR_PRESETS[0].fill, stroke: COLOR_PRESETS[0].stroke }
+    : { fill: "hsl(20 60% 55%)", stroke: "hsl(20 65% 42%)" },
 };
 
-// ── Zod schema ──────────────────────────────────────────────────────────
+interface CustomWheelConfig {
+  title: string;
+  categories: string[];
+  colorIndex: number;
+}
 
-const DEFAULT_VALUES = [5, 5, 5, 5, 5, 5, 5, 5] as const;
+const DEFAULT_CUSTOM_CONFIG: CustomWheelConfig = {
+  title: "Mi Rueda Personalizada",
+  categories: [
+    "Categoría 1",
+    "Categoría 2",
+    "Categoría 3",
+    "Categoría 4",
+    "Categoría 5",
+    "Categoría 6",
+    "Categoría 7",
+    "Categoría 8",
+  ],
+  colorIndex: 0,
+};
+
+const MIN_CATEGORIES = 4;
+const MAX_CATEGORIES = 12;
 
 const formSchema = z.object({
   coacheeName: z.string().min(1, "El nombre del coachee es obligatorio"),
   wheelType: z.enum(WHEEL_TYPES),
-  values: z.array(z.number().min(1).max(10)).length(8),
+  values: z
+    .array(z.number().min(1).max(10))
+    .min(MIN_CATEGORIES)
+    .max(MAX_CATEGORIES),
   notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-// ── Custom radar tick (handles multi‑line labels) ───────────────────────
 
 function CustomAngleTick(
   props: Readonly<{
@@ -185,8 +234,6 @@ function CustomAngleTick(
     </g>
   );
 }
-
-// ── SVG‑to‑image helper (for PDF) ──────────────────────────────────────
 
 async function svgToDataUrl(container: HTMLElement): Promise<string> {
   const svg = container.querySelector("svg");
@@ -251,8 +298,6 @@ async function svgToDataUrl(container: HTMLElement): Promise<string> {
   });
 }
 
-// ── Score indicator component ───────────────────────────────────────────
-
 function ScoreIndicator({
   value,
   color,
@@ -277,8 +322,6 @@ function ScoreIndicator({
     </div>
   );
 }
-
-// ── Average score component ─────────────────────────────────────────────
 
 function AverageScore({
   values,
@@ -313,12 +356,243 @@ function AverageScore({
   );
 }
 
-// ── Main component ──────────────────────────────────────────────────────
+function CustomWheelDialogContent({
+  config,
+  onOpenChange,
+  onSave,
+}: Readonly<{
+  config: CustomWheelConfig;
+  onOpenChange: (open: boolean) => void;
+  onSave: (config: CustomWheelConfig) => void;
+}>) {
+  const [draft, setDraft] = useState<CustomWheelConfig>(config);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const updateCategory = (index: number, value: string) => {
+    setDraft((prev) => {
+      const cats = [...prev.categories];
+      cats[index] = value;
+      return { ...prev, categories: cats };
+    });
+  };
+
+  const addCategory = () => {
+    if (draft.categories.length >= MAX_CATEGORIES) return;
+    setDraft((prev) => ({
+      ...prev,
+      categories: [
+        ...prev.categories,
+        `Categoría ${prev.categories.length + 1}`,
+      ],
+    }));
+  };
+
+  const removeCategory = (index: number) => {
+    if (draft.categories.length <= MIN_CATEGORIES) return;
+    setDraft((prev) => ({
+      ...prev,
+      categories: prev.categories.filter((_, i) => i !== index),
+    }));
+  };
+
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!draft.title.trim()) {
+      errs.title = "El título es obligatorio";
+    }
+    const emptyIdx = draft.categories.findIndex((c) => !c.trim());
+    if (emptyIdx >= 0) {
+      errs[`cat-${emptyIdx}`] = "La categoría no puede estar vacía";
+    }
+    const seen = new Set<string>();
+    for (let i = 0; i < draft.categories.length; i++) {
+      const norm = draft.categories[i].trim().toLowerCase();
+      if (seen.has(norm)) {
+        errs[`cat-${i}`] = "Categoría duplicada";
+        break;
+      }
+      seen.add(norm);
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSave = () => {
+    if (!validate()) return;
+    onSave({
+      ...draft,
+      title: draft.title.trim(),
+      categories: draft.categories.map((c) => c.trim()),
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-warm-900">
+          Configurar Rueda Personalizada
+        </DialogTitle>
+        <DialogDescription className="text-warm-500">
+          Define el título, las categorías ({MIN_CATEGORIES}–{MAX_CATEGORIES}) y
+          el color de tu rueda.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-5 py-2">
+        <Field data-invalid={!!errors.title}>
+          <FieldLabel htmlFor="custom-title">Título de la Rueda</FieldLabel>
+          <Input
+            id="custom-title"
+            value={draft.title}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, title: e.target.value }))
+            }
+            placeholder="Ej: Rueda del Bienestar"
+            className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
+            aria-invalid={!!errors.title}
+          />
+          {errors.title && (
+            <p className="text-destructive text-xs mt-1">{errors.title}</p>
+          )}
+        </Field>
+
+        <div>
+          <FieldLabel>Color</FieldLabel>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {COLOR_PRESETS.map((preset, i) => (
+              <button
+                key={preset.name}
+                type="button"
+                onClick={() => setDraft((prev) => ({ ...prev, colorIndex: i }))}
+                className="group relative flex size-8 items-center justify-center rounded-full border-2 transition-all"
+                style={{
+                  backgroundColor: preset.fill,
+                  borderColor:
+                    draft.colorIndex === i ? preset.stroke : "transparent",
+                  boxShadow:
+                    draft.colorIndex === i
+                      ? `0 0 0 2px ${preset.fill}40`
+                      : "none",
+                }}
+                title={preset.name}
+              >
+                {draft.colorIndex === i && (
+                  <div className="size-2 rounded-full bg-white" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <FieldLabel>
+              Categorías ({draft.categories.length}/{MAX_CATEGORIES})
+            </FieldLabel>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={addCategory}
+              disabled={draft.categories.length >= MAX_CATEGORIES}
+              className="gap-1 text-warm-500 hover:text-warm-700"
+            >
+              <PlusIcon className="size-3.5" />
+              Añadir
+            </Button>
+          </div>
+          <div className="mt-2 space-y-2">
+            {draft.categories.map((cat, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="w-5 text-center text-xs font-mono text-warm-400">
+                  {i + 1}
+                </span>
+                <Input
+                  value={cat}
+                  onChange={(e) => updateCategory(i, e.target.value)}
+                  placeholder={`Categoría ${i + 1}`}
+                  className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
+                  aria-invalid={!!errors[`cat-${i}`]}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeCategory(i)}
+                  disabled={draft.categories.length <= MIN_CATEGORIES}
+                  className="size-8 shrink-0 text-warm-400 hover:text-destructive"
+                >
+                  <TrashIcon className="size-3.5" />
+                </Button>
+                {errors[`cat-${i}`] && (
+                  <p className="text-destructive text-xs whitespace-nowrap">
+                    {errors[`cat-${i}`]}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          className="border-warm-200 text-warm-600"
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSave}
+          className="bg-warm-800 text-warm-50 hover:bg-warm-900"
+        >
+          Guardar configuración
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
+
+function CustomWheelDialog({
+  open,
+  onOpenChange,
+  config,
+  onSave,
+}: Readonly<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  config: CustomWheelConfig;
+  onSave: (config: CustomWheelConfig) => void;
+}>) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        {open && (
+          <CustomWheelDialogContent
+            key={String(open)}
+            config={config}
+            onOpenChange={onOpenChange}
+            onSave={onSave}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function WheelOfLifeForm() {
   const chartRef = useRef<HTMLDivElement>(null);
   const prevType = useRef<WheelType>("personal");
   const [isExporting, setIsExporting] = useState(false);
+  const [customConfig, setCustomConfig] = useState<CustomWheelConfig>(
+    DEFAULT_CUSTOM_CONFIG,
+  );
+  const [showCustomDialog, setShowCustomDialog] = useState(false);
+  const [customConfigured, setCustomConfigured] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -326,7 +600,7 @@ export default function WheelOfLifeForm() {
     defaultValues: {
       coacheeName: "",
       wheelType: "personal",
-      values: [...DEFAULT_VALUES],
+      values: [5, 5, 5, 5, 5, 5, 5, 5],
       notes: "",
     },
   });
@@ -334,15 +608,65 @@ export default function WheelOfLifeForm() {
   const wheelType = form.watch("wheelType");
   const values = form.watch("values");
   const coacheeName = form.watch("coacheeName");
-  const categories = WHEEL_CATEGORIES[wheelType];
-  const colors = WHEEL_COLORS[wheelType];
+
+  const isCustom = wheelType === "personalizada";
+  const categories = isCustom
+    ? customConfig.categories
+    : (WHEEL_CATEGORIES[wheelType] ?? WHEEL_CATEGORIES.personal);
+  const colors = isCustom
+    ? {
+        fill: COLOR_PRESETS[customConfig.colorIndex].fill,
+        stroke: COLOR_PRESETS[customConfig.colorIndex].stroke,
+      }
+    : (WHEEL_COLORS[wheelType] ?? WHEEL_COLORS.personal);
+  const displayTitle = isCustom
+    ? customConfig.title.toUpperCase()
+    : WHEEL_TITLES[wheelType];
 
   useEffect(() => {
     if (prevType.current !== wheelType) {
-      form.setValue("values", [...DEFAULT_VALUES]);
+      const catCount = isCustom
+        ? customConfig.categories.length
+        : (WHEEL_CATEGORIES[wheelType]?.length ?? 8);
+      form.setValue(
+        "values",
+        Array.from({ length: catCount }, () => 5),
+      );
       prevType.current = wheelType;
     }
-  }, [wheelType, form]);
+  }, [wheelType, form, isCustom, customConfig.categories.length]);
+
+  const handleWheelTypeChange = (
+    value: string,
+    fieldOnChange: (v: string) => void,
+  ) => {
+    if (value === "personalizada" && !customConfigured) {
+      setShowCustomDialog(true);
+    }
+    fieldOnChange(value);
+  };
+
+  const handleSaveCustomConfig = (newConfig: CustomWheelConfig) => {
+    const prevCatCount = customConfig.categories.length;
+    const newCatCount = newConfig.categories.length;
+    setCustomConfig(newConfig);
+    setCustomConfigured(true);
+
+    if (isCustom && prevCatCount !== newCatCount) {
+      form.setValue(
+        "values",
+        Array.from({ length: newCatCount }, (_, i) => values[i] ?? 5),
+      );
+    }
+    if (!isCustom) {
+      form.setValue("wheelType", "personalizada");
+      form.setValue(
+        "values",
+        Array.from({ length: newCatCount }, () => 5),
+      );
+      prevType.current = "personalizada";
+    }
+  };
 
   const chartConfig: ChartConfig = {
     value: {
@@ -357,8 +681,6 @@ export default function WheelOfLifeForm() {
     fullMark: 10,
   }));
 
-  // ── PDF export handler ────────────────────────────────────────────────
-
   const handleExportPdf = useCallback(async () => {
     const valid = await form.trigger();
     if (!valid) return;
@@ -370,8 +692,20 @@ export default function WheelOfLifeForm() {
       const type = form.getValues("wheelType");
       const vals = form.getValues("values");
       const notes = form.getValues("notes") ?? "";
-      const cats = WHEEL_CATEGORIES[type];
-      const title = WHEEL_TITLES[type];
+
+      const isCustomType = type === "personalizada";
+      const cats = isCustomType
+        ? customConfig.categories
+        : (WHEEL_CATEGORIES[type] ?? []);
+      const title = isCustomType
+        ? customConfig.title.toUpperCase()
+        : WHEEL_TITLES[type];
+      const col = isCustomType
+        ? {
+            fill: COLOR_PRESETS[customConfig.colorIndex].fill,
+            stroke: COLOR_PRESETS[customConfig.colorIndex].stroke,
+          }
+        : WHEEL_COLORS[type];
 
       const pdf = new jsPDF("portrait", "mm", "a4");
       const pageW = 210;
@@ -424,7 +758,6 @@ export default function WheelOfLifeForm() {
         pdf.setDrawColor(200);
         pdf.setFillColor(230, 230, 230);
         pdf.roundedRect(barX, y - 3, barW, 4, 1, 1, "FD");
-        const col = WHEEL_COLORS[type];
         const rgb = hslToRgb(col.fill);
         pdf.setFillColor(rgb.r, rgb.g, rgb.b);
         pdf.roundedRect(barX, y - 3, (barW * vals[i]) / 10, 4, 1, 1, "F");
@@ -452,12 +785,18 @@ export default function WheelOfLifeForm() {
     } finally {
       setIsExporting(false);
     }
-  }, [form]);
+  }, [form, customConfig]);
 
   return (
     <TooltipProvider>
+      <CustomWheelDialog
+        open={showCustomDialog}
+        onOpenChange={setShowCustomDialog}
+        config={customConfig}
+        onSave={handleSaveCustomConfig}
+      />
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-start lg:gap-8">
-        {/* ── Form column ──────────────────────────────────────────── */}
         <div className="space-y-5">
           <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
             <CardHeader>
@@ -509,29 +848,51 @@ export default function WheelOfLifeForm() {
                         <FieldLabel htmlFor="wheelType">
                           Tipo de Rueda
                         </FieldLabel>
-                        <Select
-                          name={field.name}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger
-                            id="wheelType"
-                            className="w-full cursor-pointer border-warm-200 bg-warm-50/50"
-                            aria-invalid={fieldState.invalid}
+                        <div className="flex gap-2">
+                          <Select
+                            name={field.name}
+                            value={field.value}
+                            onValueChange={(v) =>
+                              handleWheelTypeChange(v, field.onChange)
+                            }
                           >
-                            <SelectValue placeholder="Selecciona un tipo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {WHEEL_TYPES.map((t) => (
-                              <SelectItem key={t} value={t}>
-                                <span className="flex items-center gap-2">
-                                  {WHEEL_ICONS[t]}
-                                  {WHEEL_LABELS[t]}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                            <SelectTrigger
+                              id="wheelType"
+                              className="w-full cursor-pointer border-warm-200 bg-warm-50/50"
+                              aria-invalid={fieldState.invalid}
+                            >
+                              <SelectValue placeholder="Selecciona un tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {WHEEL_TYPES.map((t) => (
+                                <SelectItem key={t} value={t}>
+                                  <span className="flex items-center gap-2">
+                                    {WHEEL_ICONS[t]}
+                                    {WHEEL_LABELS[t]}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {isCustom && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => setShowCustomDialog(true)}
+                                  className="shrink-0 border-warm-200 text-warm-500 hover:border-warm-300 hover:text-warm-700"
+                                >
+                                  <PencilIcon className="size-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Editar rueda personalizada
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
                         )}
@@ -543,7 +904,6 @@ export default function WheelOfLifeForm() {
             </CardContent>
           </Card>
 
-          {/* Category sliders card */}
           <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -611,7 +971,6 @@ export default function WheelOfLifeForm() {
             </CardContent>
           </Card>
 
-          {/* Notes card */}
           <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
             <CardContent className="pt-6">
               <Controller
@@ -649,12 +1008,11 @@ export default function WheelOfLifeForm() {
           </Card>
         </div>
 
-        {/* ── Chart column ─────────────────────────────────────────── */}
         <div className="flex flex-col gap-5 lg:sticky lg:top-8">
           <Card className="overflow-hidden border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
             <CardHeader className="items-center border-b border-warm-100 bg-warm-50/30 pb-4">
               <CardTitle className="font-display text-lg tracking-wide text-warm-900">
-                {WHEEL_TITLES[wheelType]}
+                {displayTitle}
               </CardTitle>
               {coacheeName && (
                 <CardDescription className="text-center text-warm-500">
@@ -710,43 +1068,59 @@ export default function WheelOfLifeForm() {
             </CardContent>
           </Card>
 
-          {/* Score summary strip */}
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-4">
-            {categories.slice(0, 4).map((cat, i) => (
-              <div
-                key={cat}
-                className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
-              >
-                <div className="truncate text-[10px] font-medium text-warm-500">
-                  {cat}
+          {(() => {
+            const half = Math.ceil(categories.length / 2);
+            return (
+              <>
+                <div
+                  className="grid gap-2"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(half, 4)}, minmax(0, 1fr))`,
+                  }}
+                >
+                  {categories.slice(0, half).map((cat, i) => (
+                    <div
+                      key={cat}
+                      className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
+                    >
+                      <div className="truncate text-[10px] font-medium text-warm-500">
+                        {cat}
+                      </div>
+                      <div
+                        className="mt-0.5 font-mono text-lg font-bold tabular-nums"
+                        style={{ color: colors.stroke }}
+                      >
+                        {values[i]}
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 <div
-                  className="mt-0.5 font-mono text-lg font-bold tabular-nums"
-                  style={{ color: colors.stroke }}
+                  className="grid gap-2"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(categories.length - half, 4)}, minmax(0, 1fr))`,
+                  }}
                 >
-                  {values[i]}
+                  {categories.slice(half).map((cat, i) => (
+                    <div
+                      key={cat}
+                      className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
+                    >
+                      <div className="truncate text-[10px] font-medium text-warm-500">
+                        {cat}
+                      </div>
+                      <div
+                        className="mt-0.5 font-mono text-lg font-bold tabular-nums"
+                        style={{ color: colors.stroke }}
+                      >
+                        {values[i + half]}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-4">
-            {categories.slice(4).map((cat, i) => (
-              <div
-                key={cat}
-                className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
-              >
-                <div className="truncate text-[10px] font-medium text-warm-500">
-                  {cat}
-                </div>
-                <div
-                  className="mt-0.5 font-mono text-lg font-bold tabular-nums"
-                  style={{ color: colors.stroke }}
-                >
-                  {values[i + 4]}
-                </div>
-              </div>
-            ))}
-          </div>
+              </>
+            );
+          })()}
 
           <Button
             size="lg"
@@ -762,8 +1136,6 @@ export default function WheelOfLifeForm() {
     </TooltipProvider>
   );
 }
-
-// ── Utility: parse HSL string to RGB ────────────────────────────────────
 
 function hslToRgb(hslStr: string): { r: number; g: number; b: number } {
   const match =
