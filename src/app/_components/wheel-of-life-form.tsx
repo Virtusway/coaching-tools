@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { jsPDF } from "jspdf";
 import { Download, RotateCcw } from "lucide-react";
@@ -109,6 +110,7 @@ const formSchema = z.object({
   coacheeName: z.string().min(1, "El nombre del coachee es obligatorio"),
   wheelType: z.enum(WHEEL_TYPES),
   values: z.array(z.number().min(1).max(10)).length(8),
+  notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -246,6 +248,7 @@ export default function WheelOfLifeForm() {
       coacheeName: "",
       wheelType: "personal",
       values: [...DEFAULT_VALUES],
+      notes: "",
     },
   });
 
@@ -288,6 +291,7 @@ export default function WheelOfLifeForm() {
     const name = form.getValues("coacheeName");
     const type = form.getValues("wheelType");
     const vals = form.getValues("values");
+    const notes = form.getValues("notes") ?? "";
     const cats = WHEEL_CATEGORIES[type];
     const title = WHEEL_TITLES[type];
 
@@ -360,10 +364,18 @@ export default function WheelOfLifeForm() {
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(12);
     pdf.text("Notas:", 25, notesY);
-    pdf.setDrawColor(200);
-    for (let i = 0; i < 4; i++) {
-      const lY = notesY + 8 + i * 8;
-      pdf.line(25, lY, 185, lY);
+
+    if (notes.trim()) {
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      const wrappedLines = pdf.splitTextToSize(notes, 160);
+      pdf.text(wrappedLines, 25, notesY + 8);
+    } else {
+      pdf.setDrawColor(200);
+      for (let i = 0; i < 4; i++) {
+        const lY = notesY + 8 + i * 8;
+        pdf.line(25, lY, 185, lY);
+      }
     }
 
     pdf.save(`rueda-vida-${name.replaceAll(/\s+/g, "-").toLowerCase()}.pdf`);
@@ -487,6 +499,23 @@ export default function WheelOfLifeForm() {
                 ))}
               </div>
             </div>
+
+            {/* Notes */}
+            <Controller
+              name="notes"
+              control={form.control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>Notas</FieldLabel>
+                  <Textarea
+                    {...field}
+                    id={field.name}
+                    placeholder="Observaciones, reflexiones o comentarios sobre la sesión…"
+                    rows={4}
+                  />
+                </Field>
+              )}
+            />
 
             {/* Reset */}
             <Button
