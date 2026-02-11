@@ -15,7 +15,7 @@ export default function WheelScoreGrid({
 }: Readonly<WheelScoreGridProps>) {
   if (categories.length === 0) {
     return (
-      <div className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-4 py-3 text-sm text-warm-600">
+      <div className="rounded-xl border border-dashed border-warm-300/60 bg-warm-50/40 px-5 py-4 text-center text-sm text-warm-500">
         No hay categorías disponibles para mostrar.
       </div>
     );
@@ -40,22 +40,34 @@ export default function WheelScoreGrid({
           {row.items.map((category, index) => {
             const absoluteIndex = row.offset + index;
             const value = values[absoluteIndex] ?? 0;
+            const percentage = (value / 10) * 100;
 
             return (
               <div
                 key={`${category}-${absoluteIndex}`}
-                className="min-w-0 rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
+                className="group relative min-w-0 overflow-hidden rounded-xl border border-warm-200/70 bg-gradient-to-b from-warm-50/80 to-white px-3 py-3 text-center transition-shadow duration-300 hover:shadow-sm"
               >
-                <div className="truncate text-[10px] font-medium text-warm-500">
+                <div className="truncate text-[10px] font-medium tracking-wide text-warm-500 uppercase">
                   {category}
                 </div>
 
                 <div
-                  className="mt-0.5 font-mono text-lg font-bold tabular-nums"
+                  className="mt-1 font-mono text-xl font-bold tabular-nums leading-tight"
                   style={{ color: strokeColor }}
                   aria-label={`${category}: ${value} sobre 10`}
                 >
                   {value}
+                </div>
+
+                <div className="mx-auto mt-2 h-1 w-full overflow-hidden rounded-full bg-warm-200/50">
+                  <div
+                    className="h-full rounded-full transition-[width,background-color] duration-500 ease-out"
+                    style={{
+                      width: `${percentage}%`,
+                      backgroundColor: strokeColor,
+                      opacity: 0.6,
+                    }}
+                  />
                 </div>
               </div>
             );

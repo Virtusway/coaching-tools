@@ -346,10 +346,10 @@ export default function WheelOfLifeForm() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-start lg:gap-8">
         <div className="space-y-5">
-          <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+          <Card className="border-warm-200/60 bg-card/90 shadow-sm backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-warm-100 text-warm-600">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-warm-100 to-warm-200/60 text-warm-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
                   <UserIcon className="size-4" aria-hidden="true" />
                 </div>
 
@@ -481,7 +481,7 @@ export default function WheelOfLifeForm() {
             </CardContent>
           </Card>
 
-          <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+          <Card className="border-warm-200/60 bg-card/90 shadow-sm backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -493,9 +493,9 @@ export default function WheelOfLifeForm() {
 
                 <Badge
                   variant="outline"
-                  className="border-warm-300 bg-warm-50 font-mono text-warm-600"
+                  className="border-warm-300/80 bg-warm-50/80 font-mono text-[11px] text-warm-500"
                 >
-                  1 - 10
+                  1 – 10
                 </Badge>
               </div>
             </CardHeader>
@@ -512,11 +512,11 @@ export default function WheelOfLifeForm() {
                         typeof field.value === "number" ? field.value : 5;
 
                       return (
-                        <div className="group rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-warm-200 hover:bg-warm-50/50">
-                          <div className="mb-2 flex items-center justify-between gap-3">
+                        <div className="group rounded-xl border border-transparent px-3.5 py-3 transition-all duration-200 hover:border-warm-200/80 hover:bg-warm-50/40 hover:shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+                          <div className="mb-2.5 flex items-center justify-between gap-3">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="min-w-0 cursor-default text-sm font-medium leading-none text-warm-800">
+                                <span className="min-w-0 cursor-default text-[13px] font-medium leading-none text-warm-800">
                                   {category}
                                 </span>
                               </TooltipTrigger>
@@ -558,13 +558,14 @@ export default function WheelOfLifeForm() {
               <div className="mt-5">
                 <AverageScore
                   values={values ?? []}
-                  color={wheelPresentation.colors.fill}
+                  fill={wheelPresentation.colors.fill}
+                  stroke={wheelPresentation.colors.stroke}
                 />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+          <Card className="border-warm-200/60 bg-card/90 shadow-sm backdrop-blur-sm">
             <CardContent className="pt-6">
               <Controller
                 name="notes"
@@ -582,7 +583,7 @@ export default function WheelOfLifeForm() {
                       placeholder="Observaciones, reflexiones o comentarios sobre la sesión…"
                       rows={4}
                       autoComplete="off"
-                      className="resize-none border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
+                      className="resize-none border-warm-200 bg-warm-50/30 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
                     />
                   </Field>
                 )}
@@ -634,14 +635,14 @@ export default function WheelOfLifeForm() {
         </div>
 
         <div className="flex flex-col gap-5 lg:sticky lg:top-8">
-          <Card className="overflow-hidden border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
-            <CardHeader className="items-center border-b border-warm-100 bg-warm-50/30 pb-4">
+          <Card className="overflow-hidden border-warm-200/60 bg-card/90 shadow-md backdrop-blur-sm">
+            <CardHeader className="items-center border-b border-warm-100/80 bg-linear-to-b from-warm-50/50 to-transparent pb-5">
               <CardTitle className="font-display text-lg tracking-wide text-warm-900">
                 {wheelPresentation.title}
               </CardTitle>
 
               {coacheeName?.trim() && (
-                <CardDescription className="text-center text-warm-500">
+                <CardDescription className="text-center text-sm text-warm-500">
                   {coacheeName}
                 </CardDescription>
               )}
@@ -707,7 +708,7 @@ export default function WheelOfLifeForm() {
 
           <Button
             size="lg"
-            className="w-full cursor-pointer gap-2.5 bg-warm-800 text-warm-50 shadow-md transition-[background-color,box-shadow,transform] hover:bg-warm-900 hover:shadow-lg active:scale-[0.98] disabled:opacity-40"
+            className="w-full cursor-pointer gap-2.5 rounded-xl bg-warm-900 text-warm-50 shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-all duration-200 hover:bg-warm-800 hover:shadow-[0_4px_16px_rgba(0,0,0,0.16)] hover:-translate-y-px active:translate-y-0 active:shadow-[0_1px_4px_rgba(0,0,0,0.1)] disabled:opacity-40 disabled:hover:translate-y-0"
             onClick={handleExportPdf}
             disabled={!coacheeName?.trim() || isExporting}
           >

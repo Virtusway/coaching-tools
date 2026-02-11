@@ -166,3 +166,13 @@
     text-wrap: balance;
   }
 }
+
+@layer base {
+  [data-slot="card"] {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  [data-slot="slider-track"] {
+    transition: background-color 0.2s ease;
+  }
+}

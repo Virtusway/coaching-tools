@@ -11,11 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { MAX_CATEGORIES, MIN_CATEGORIES } from "./wheel-of-life-model";
-import type { CustomWheelConfig } from "./wheel-of-life-model";
-import { COLOR_PRESETS } from "./wheel-of-life-model";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
+import type { CustomWheelConfig } from "./wheel-of-life-model";
+import {
+  COLOR_PRESETS,
+  MAX_CATEGORIES,
+  MIN_CATEGORIES,
+} from "./wheel-of-life-model";
 
 type CustomDialogProps = {
   open: boolean;
@@ -76,7 +79,10 @@ export default function WheelOfLifeCustomDialog({
 
     setDraft((current) => ({
       ...current,
-      categories: [...current.categories, `Categoría ${current.categories.length + 1}`],
+      categories: [
+        ...current.categories,
+        `Categoría ${current.categories.length + 1}`,
+      ],
     }));
   };
 
@@ -118,8 +124,8 @@ export default function WheelOfLifeCustomDialog({
             Configurar Rueda Personalizada
           </DialogTitle>
           <DialogDescription className="text-warm-500">
-            Define el título, las categorías ({MIN_CATEGORIES}–{MAX_CATEGORIES}) y
-            el color de tu rueda.
+            Define el título, las categorías ({MIN_CATEGORIES}–{MAX_CATEGORIES})
+            y el color de tu rueda.
           </DialogDescription>
         </DialogHeader>
 
@@ -131,7 +137,10 @@ export default function WheelOfLifeCustomDialog({
               name="custom-title"
               value={draft.title}
               onChange={(event) => {
-                setDraft((current) => ({ ...current, title: event.target.value }));
+                setDraft((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }));
               }}
               placeholder="Ej: Rueda del Bienestar…"
               autoComplete="off"
@@ -158,20 +167,28 @@ export default function WheelOfLifeCustomDialog({
                     key={preset.name}
                     type="button"
                     onClick={() => {
-                      setDraft((current) => ({ ...current, colorIndex: index }));
+                      setDraft((current) => ({
+                        ...current,
+                        colorIndex: index,
+                      }));
                     }}
                     className="touch-manipulation group relative flex size-8 items-center justify-center rounded-full border-2 transition-[box-shadow,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-warm-400 focus-visible:ring-offset-2 focus-visible:outline-none"
                     style={{
                       backgroundColor: preset.fill,
                       borderColor: isSelected ? preset.stroke : "transparent",
-                      boxShadow: isSelected ? `0 0 0 2px ${preset.fill}40` : "none",
+                      boxShadow: isSelected
+                        ? `0 0 0 2px ${preset.fill}40`
+                        : "none",
                     }}
                     title={preset.name}
                     aria-label={`Seleccionar color ${preset.name}`}
                     aria-pressed={isSelected}
                   >
                     {isSelected && (
-                      <div className="size-2 rounded-full bg-white" aria-hidden="true" />
+                      <div
+                        className="size-2 rounded-full bg-white"
+                        aria-hidden="true"
+                      />
                     )}
                   </button>
                 );
