@@ -516,7 +516,7 @@ export default function WheelOfLifeForm() {
                         >
                           <SelectTrigger
                             id="wheelType"
-                            className="w-full border-warm-200 bg-warm-50/50"
+                            className="w-full cursor-pointer border-warm-200 bg-warm-50/50"
                             aria-invalid={fieldState.invalid}
                           >
                             <SelectValue placeholder="Selecciona un tipo" />
@@ -592,7 +592,7 @@ export default function WheelOfLifeForm() {
                           min={1}
                           max={10}
                           step={1}
-                          className="w-full"
+                          className="w-full cursor-pointer"
                           style={
                             {
                               "--slider-color": colors.fill,
