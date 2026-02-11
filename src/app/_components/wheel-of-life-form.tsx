@@ -31,10 +31,23 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { jsPDF } from "jspdf";
-import { Download, RotateCcw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import {
+  BriefcaseIcon,
+  Download,
+  HeartIcon,
+  PersonStandingIcon,
+  RotateCcw,
+  UserIcon,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   PolarAngleAxis,
@@ -62,7 +75,12 @@ const WHEEL_TITLES: Record<WheelType, string> = {
   profesional: "RUEDA DE LA VIDA PROFESIONAL",
 };
 
-// Category order follows the images (clockwise from top‑left)
+const WHEEL_ICONS: Record<WheelType, React.ReactNode> = {
+  personal: <PersonStandingIcon className="size-4" />,
+  pareja: <HeartIcon className="size-4" />,
+  profesional: <BriefcaseIcon className="size-4" />,
+};
+
 const WHEEL_CATEGORIES: Record<WheelType, readonly string[]> = {
   personal: [
     "Ocio",
@@ -97,9 +115,9 @@ const WHEEL_CATEGORIES: Record<WheelType, readonly string[]> = {
 };
 
 const WHEEL_COLORS: Record<WheelType, { fill: string; stroke: string }> = {
-  personal: { fill: "hsl(172 66% 50%)", stroke: "hsl(172 66% 38%)" },
-  pareja: { fill: "hsl(340 75% 55%)", stroke: "hsl(340 75% 42%)" },
-  profesional: { fill: "hsl(221 83% 53%)", stroke: "hsl(221 83% 40%)" },
+  personal: { fill: "hsl(172 50% 45%)", stroke: "hsl(172 55% 35%)" },
+  pareja: { fill: "hsl(350 60% 55%)", stroke: "hsl(350 65% 42%)" },
+  profesional: { fill: "hsl(221 65% 50%)", stroke: "hsl(221 70% 38%)" },
 };
 
 // ── Zod schema ──────────────────────────────────────────────────────────
@@ -127,7 +145,6 @@ function CustomAngleTick(
 ) {
   const { x, y, payload, textAnchor } = props;
   const raw = payload.value;
-  // Split on "/" or when text > 14 chars
   const parts = raw.split("/").flatMap((part) => {
     const trimmed = part.trim();
     if (trimmed.length <= 14) return [trimmed];
@@ -197,7 +214,6 @@ async function svgToDataUrl(container: HTMLElement): Promise<string> {
     );
   });
 
-  // Add a white background rect
   const bgRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   bgRect.setAttribute("width", "100%");
   bgRect.setAttribute("height", "100%");
@@ -235,11 +251,74 @@ async function svgToDataUrl(container: HTMLElement): Promise<string> {
   });
 }
 
+// ── Score indicator component ───────────────────────────────────────────
+
+function ScoreIndicator({
+  value,
+  color,
+}: Readonly<{ value: number; color: string }>) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="flex gap-0.5">
+        {Array.from({ length: 10 }, (_, i) => (
+          <div
+            key={i}
+            className="h-1.5 w-1 rounded-full transition-all duration-300"
+            style={{
+              backgroundColor: i < value ? color : "oklch(0.92 0.01 75)",
+              opacity: i < value ? 1 : 0.5,
+            }}
+          />
+        ))}
+      </div>
+      <span className="min-w-6 text-right font-mono text-xs font-semibold tabular-nums text-warm-700">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ── Average score component ─────────────────────────────────────────────
+
+function AverageScore({
+  values,
+  color,
+}: Readonly<{ values: number[]; color: string }>) {
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  const rounded = Math.round(avg * 10) / 10;
+
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-warm-200 bg-warm-50/60 px-4 py-3">
+      <span className="text-sm font-medium text-warm-600">
+        Promedio general
+      </span>
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-20 overflow-hidden rounded-full bg-warm-200">
+          <div
+            className="h-full rounded-full transition-all duration-500 ease-out"
+            style={{
+              width: `${(avg / 10) * 100}%`,
+              backgroundColor: color,
+            }}
+          />
+        </div>
+        <span
+          className="min-w-8 text-right font-mono text-lg font-bold tabular-nums"
+          style={{ color }}
+        >
+          {rounded}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ──────────────────────────────────────────────────────
 
 export default function WheelOfLifeForm() {
   const chartRef = useRef<HTMLDivElement>(null);
   const prevType = useRef<WheelType>("personal");
+  const [isExporting, setIsExporting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -258,7 +337,6 @@ export default function WheelOfLifeForm() {
   const categories = WHEEL_CATEGORIES[wheelType];
   const colors = WHEEL_COLORS[wheelType];
 
-  // Reset values when wheel type changes
   useEffect(() => {
     if (prevType.current !== wheelType) {
       form.setValue("values", [...DEFAULT_VALUES]);
@@ -266,7 +344,6 @@ export default function WheelOfLifeForm() {
     }
   }, [wheelType, form]);
 
-  // Chart config for ChartContainer
   const chartConfig: ChartConfig = {
     value: {
       label: "Valoración",
@@ -274,7 +351,6 @@ export default function WheelOfLifeForm() {
     },
   };
 
-  // Data for the radar chart
   const chartData = categories.map((cat, i) => ({
     category: cat,
     value: values[i] ?? 5,
@@ -283,202 +359,232 @@ export default function WheelOfLifeForm() {
 
   // ── PDF export handler ────────────────────────────────────────────────
 
-  const handleExportPdf = async () => {
-    // Trigger validation
+  const handleExportPdf = useCallback(async () => {
     const valid = await form.trigger();
     if (!valid) return;
 
-    const name = form.getValues("coacheeName");
-    const type = form.getValues("wheelType");
-    const vals = form.getValues("values");
-    const notes = form.getValues("notes") ?? "";
-    const cats = WHEEL_CATEGORIES[type];
-    const title = WHEEL_TITLES[type];
+    setIsExporting(true);
 
-    const pdf = new jsPDF("portrait", "mm", "a4");
-    const pageW = 210;
+    try {
+      const name = form.getValues("coacheeName");
+      const type = form.getValues("wheelType");
+      const vals = form.getValues("values");
+      const notes = form.getValues("notes") ?? "";
+      const cats = WHEEL_CATEGORIES[type];
+      const title = WHEEL_TITLES[type];
 
-    // Title
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.text(title, pageW / 2, 22, { align: "center" });
+      const pdf = new jsPDF("portrait", "mm", "a4");
+      const pageW = 210;
 
-    // Coachee name
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(12);
-    pdf.text(`Coachee: ${name}`, pageW / 2, 32, { align: "center" });
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(18);
+      pdf.text(title, pageW / 2, 22, { align: "center" });
 
-    // Date
-    pdf.setFontSize(10);
-    pdf.text(
-      `Fecha: ${new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })}`,
-      pageW / 2,
-      39,
-      { align: "center" },
-    );
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(12);
+      pdf.text(`Coachee: ${name}`, pageW / 2, 32, { align: "center" });
 
-    // Chart image
-    if (chartRef.current) {
-      try {
-        const imgData = await svgToDataUrl(chartRef.current);
-        const chartSize = 130;
-        const xOffset = (pageW - chartSize) / 2;
-        pdf.addImage(imgData, "PNG", xOffset, 45, chartSize, chartSize);
-      } catch {
-        // If chart capture fails, continue with text only
-        pdf.setFontSize(10);
-        pdf.setTextColor(150);
-        pdf.text("(No se pudo capturar el gráfico)", pageW / 2, 110, {
-          align: "center",
-        });
-        pdf.setTextColor(0);
+      pdf.setFontSize(10);
+      pdf.text(
+        `Fecha: ${new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })}`,
+        pageW / 2,
+        39,
+        { align: "center" },
+      );
+
+      if (chartRef.current) {
+        try {
+          const imgData = await svgToDataUrl(chartRef.current);
+          const chartSize = 130;
+          const xOffset = (pageW - chartSize) / 2;
+          pdf.addImage(imgData, "PNG", xOffset, 45, chartSize, chartSize);
+        } catch {
+          pdf.setFontSize(10);
+          pdf.setTextColor(150);
+          pdf.text("(No se pudo capturar el gráfico)", pageW / 2, 110, {
+            align: "center",
+          });
+          pdf.setTextColor(0);
+        }
       }
-    }
 
-    // Values table
-    const tableY = 182;
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.text("Valoraciones:", 25, tableY);
+      const tableY = 182;
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("Valoraciones:", 25, tableY);
 
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    cats.forEach((cat, i) => {
-      const y = tableY + 8 + i * 7;
-      pdf.text(`${cat}:`, 28, y);
-      pdf.text(`${vals[i]}/10`, 120, y);
-      // Draw a mini bar
-      const barW = 50;
-      const barX = 130;
-      pdf.setDrawColor(200);
-      pdf.setFillColor(230, 230, 230);
-      pdf.roundedRect(barX, y - 3, barW, 4, 1, 1, "FD");
-      const col = WHEEL_COLORS[type];
-      const rgb = hslToRgb(col.fill);
-      pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-      pdf.roundedRect(barX, y - 3, (barW * vals[i]) / 10, 4, 1, 1, "F");
-    });
-
-    // Notes section
-    const notesY = tableY + 8 + cats.length * 7 + 8;
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(12);
-    pdf.text("Notas:", 25, notesY);
-
-    if (notes.trim()) {
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
-      const wrappedLines = pdf.splitTextToSize(notes, 160);
-      pdf.text(wrappedLines, 25, notesY + 8);
-    } else {
-      pdf.setDrawColor(200);
-      for (let i = 0; i < 4; i++) {
-        const lY = notesY + 8 + i * 8;
-        pdf.line(25, lY, 185, lY);
-      }
-    }
+      cats.forEach((cat, i) => {
+        const y = tableY + 8 + i * 7;
+        pdf.text(`${cat}:`, 28, y);
+        pdf.text(`${vals[i]}/10`, 120, y);
+        const barW = 50;
+        const barX = 130;
+        pdf.setDrawColor(200);
+        pdf.setFillColor(230, 230, 230);
+        pdf.roundedRect(barX, y - 3, barW, 4, 1, 1, "FD");
+        const col = WHEEL_COLORS[type];
+        const rgb = hslToRgb(col.fill);
+        pdf.setFillColor(rgb.r, rgb.g, rgb.b);
+        pdf.roundedRect(barX, y - 3, (barW * vals[i]) / 10, 4, 1, 1, "F");
+      });
 
-    pdf.save(`rueda-vida-${name.replaceAll(/\s+/g, "-").toLowerCase()}.pdf`);
-  };
+      const notesY = tableY + 8 + cats.length * 7 + 8;
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text("Notas:", 25, notesY);
+
+      if (notes.trim()) {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        const wrappedLines = pdf.splitTextToSize(notes, 160);
+        pdf.text(wrappedLines, 25, notesY + 8);
+      } else {
+        pdf.setDrawColor(200);
+        for (let i = 0; i < 4; i++) {
+          const lY = notesY + 8 + i * 8;
+          pdf.line(25, lY, 185, lY);
+        }
+      }
+
+      pdf.save(`rueda-vida-${name.replaceAll(/\s+/g, "-").toLowerCase()}.pdf`);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [form]);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-start">
-      {/* ── Form column ──────────────────────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Datos del Coachee</CardTitle>
-          <CardDescription>
-            Introduce el nombre, selecciona el tipo de rueda y ajusta las
-            valoraciones de cada categoría.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
-            <FieldGroup>
-              {/* Name */}
-              <Controller
-                name="coacheeName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>
-                      Nombre del Coachee
-                    </FieldLabel>
-                    <Input
-                      {...field}
-                      id={field.name}
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Ej: María García"
-                      autoComplete="off"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
+    <TooltipProvider>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:items-start lg:gap-8">
+        {/* ── Form column ──────────────────────────────────────────── */}
+        <div className="space-y-5">
+          <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-warm-100 text-warm-600">
+                  <UserIcon className="size-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-warm-900">
+                    Datos del Coachee
+                  </CardTitle>
+                  <CardDescription className="text-warm-500">
+                    Nombre y tipo de rueda a evaluar.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <FieldGroup>
+                  <Controller
+                    name="coacheeName"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Nombre del Coachee
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="Ej: María García"
+                          autoComplete="off"
+                          className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
-                  </Field>
-                )}
-              />
+                  />
 
-              {/* Wheel type */}
-              <Controller
-                name="wheelType"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="wheelType">Tipo de Rueda</FieldLabel>
-                    <Select
-                      name={field.name}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger
-                        id="wheelType"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Selecciona un tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {WHEEL_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {WHEEL_LABELS[t]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
+                  <Controller
+                    name="wheelType"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="wheelType">
+                          Tipo de Rueda
+                        </FieldLabel>
+                        <Select
+                          name={field.name}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger
+                            id="wheelType"
+                            className="w-full border-warm-200 bg-warm-50/50"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Selecciona un tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {WHEEL_TYPES.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                <span className="flex items-center gap-2">
+                                  {WHEEL_ICONS[t]}
+                                  {WHEEL_LABELS[t]}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
                     )}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
+                  />
+                </FieldGroup>
+              </form>
+            </CardContent>
+          </Card>
 
-            {/* Category sliders */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium leading-none">
-                Valoraciones (1 – 10)
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Ajusta cada categoría según la situación actual del coachee.
-              </p>
-              <div className="mt-4 space-y-5">
+          {/* Category sliders card */}
+          <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-warm-900">Valoraciones</CardTitle>
+                  <CardDescription className="text-warm-500">
+                    Ajusta cada categoría del 1 al 10.
+                  </CardDescription>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="border-warm-300 bg-warm-50 font-mono text-warm-600"
+                >
+                  1 – 10
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
                 {categories.map((cat, index) => (
                   <Controller
                     key={`${wheelType}-${index}`}
                     name={`values.${index}` as const}
                     control={form.control}
                     render={({ field }) => (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium leading-none">
-                            {cat}
-                          </label>
-                          <Badge
-                            variant="secondary"
-                            className="tabular-nums font-mono text-xs"
-                          >
-                            {field.value}
-                          </Badge>
+                      <div className="group rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-warm-200 hover:bg-warm-50/50">
+                        <div className="mb-2 flex items-center justify-between">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <label className="cursor-default text-sm font-medium leading-none text-warm-800">
+                                {cat}
+                              </label>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {cat}: {field.value}/10
+                            </TooltipContent>
+                          </Tooltip>
+                          <ScoreIndicator
+                            value={field.value}
+                            color={colors.fill}
+                          />
                         </div>
                         <Slider
                           value={[field.value]}
@@ -498,111 +604,162 @@ export default function WheelOfLifeForm() {
                   />
                 ))}
               </div>
-            </div>
 
-            {/* Notes */}
-            <Controller
-              name="notes"
-              control={form.control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Notas</FieldLabel>
-                  <Textarea
-                    {...field}
-                    id={field.name}
-                    placeholder="Observaciones, reflexiones o comentarios sobre la sesión…"
-                    rows={4}
-                  />
-                </Field>
+              <div className="mt-5">
+                <AverageScore values={values} color={colors.fill} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notes card */}
+          <Card className="border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <Controller
+                name="notes"
+                control={form.control}
+                render={({ field }) => (
+                  <Field>
+                    <FieldLabel htmlFor={field.name}>
+                      Notas de la sesión
+                    </FieldLabel>
+                    <Textarea
+                      {...field}
+                      id={field.name}
+                      placeholder="Observaciones, reflexiones o comentarios sobre la sesión…"
+                      rows={4}
+                      className="resize-none border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
+                    />
+                  </Field>
+                )}
+              />
+
+              <div className="mt-4 flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => form.reset()}
+                  className="gap-2 text-warm-500 hover:bg-warm-100 hover:text-warm-700"
+                >
+                  <RotateCcw className="size-3.5" />
+                  Reiniciar todo
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ── Chart column ─────────────────────────────────────────── */}
+        <div className="flex flex-col gap-5 lg:sticky lg:top-8">
+          <Card className="overflow-hidden border-warm-200/80 bg-card/80 shadow-sm backdrop-blur-sm">
+            <CardHeader className="items-center border-b border-warm-100 bg-warm-50/30 pb-4">
+              <CardTitle className="font-display text-lg tracking-wide text-warm-900">
+                {WHEEL_TITLES[wheelType]}
+              </CardTitle>
+              {coacheeName && (
+                <CardDescription className="text-center text-warm-500">
+                  {coacheeName}
+                </CardDescription>
               )}
-            />
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div ref={chartRef}>
+                <ChartContainer
+                  config={chartConfig}
+                  className="mx-auto aspect-square w-full max-w-[500px]"
+                >
+                  <RadarChart data={chartData} outerRadius="70%">
+                    <PolarGrid gridType="circle" />
+                    <PolarAngleAxis
+                      dataKey="category"
+                      tick={(tickProps: Record<string, unknown>) => (
+                        <CustomAngleTick
+                          {...(tickProps as Parameters<
+                            typeof CustomAngleTick
+                          >[0])}
+                        />
+                      )}
+                      tickLine={false}
+                    />
+                    <PolarRadiusAxis
+                      domain={[0, 10]}
+                      tickCount={11}
+                      tick={false}
+                      axisLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    <Radar
+                      name="Valoración"
+                      dataKey="value"
+                      stroke={colors.stroke}
+                      fill={colors.fill}
+                      fillOpacity={0.2}
+                      strokeWidth={2.5}
+                      dot={{
+                        r: 4.5,
+                        fill: colors.stroke,
+                        strokeWidth: 2,
+                        stroke: "#fff",
+                      }}
+                      animationDuration={600}
+                      animationEasing="ease-out"
+                    />
+                  </RadarChart>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Reset */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => form.reset()}
-              className="gap-2"
-            >
-              <RotateCcw className="size-4" />
-              Reiniciar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* ── Chart column ─────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 lg:sticky lg:top-8">
-        <Card>
-          <CardHeader className="items-center pb-2">
-            <CardTitle className="text-center">
-              {WHEEL_TITLES[wheelType]}
-            </CardTitle>
-            {coacheeName && (
-              <CardDescription className="text-center">
-                {coacheeName}
-              </CardDescription>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div ref={chartRef}>
-              <ChartContainer
-                config={chartConfig}
-                className="mx-auto aspect-square w-full max-w-[500px]"
+          {/* Score summary strip */}
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-4">
+            {categories.slice(0, 4).map((cat, i) => (
+              <div
+                key={cat}
+                className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
               >
-                <RadarChart data={chartData} outerRadius="70%">
-                  <PolarGrid gridType="circle" />
-                  <PolarAngleAxis
-                    dataKey="category"
-                    tick={(tickProps: Record<string, unknown>) => (
-                      <CustomAngleTick
-                        {...(tickProps as Parameters<
-                          typeof CustomAngleTick
-                        >[0])}
-                      />
-                    )}
-                    tickLine={false}
-                  />
-                  <PolarRadiusAxis
-                    domain={[0, 10]}
-                    tickCount={11}
-                    tick={false}
-                    axisLine={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  <Radar
-                    name="Valoración"
-                    dataKey="value"
-                    stroke={colors.stroke}
-                    fill={colors.fill}
-                    fillOpacity={0.25}
-                    strokeWidth={2}
-                    dot={{
-                      r: 4,
-                      fill: colors.stroke,
-                      strokeWidth: 0,
-                    }}
-                    animationDuration={600}
-                    animationEasing="ease-out"
-                  />
-                </RadarChart>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="truncate text-[10px] font-medium text-warm-500">
+                  {cat}
+                </div>
+                <div
+                  className="mt-0.5 font-mono text-lg font-bold tabular-nums"
+                  style={{ color: colors.stroke }}
+                >
+                  {values[i]}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-4">
+            {categories.slice(4).map((cat, i) => (
+              <div
+                key={cat}
+                className="rounded-lg border border-warm-200/70 bg-warm-50/60 px-3 py-2.5 text-center"
+              >
+                <div className="truncate text-[10px] font-medium text-warm-500">
+                  {cat}
+                </div>
+                <div
+                  className="mt-0.5 font-mono text-lg font-bold tabular-nums"
+                  style={{ color: colors.stroke }}
+                >
+                  {values[i + 4]}
+                </div>
+              </div>
+            ))}
+          </div>
 
-        <Button
-          size="lg"
-          className="w-full gap-2"
-          onClick={handleExportPdf}
-          disabled={!coacheeName}
-        >
-          <Download className="size-4" />
-          Guardar en PDF
-        </Button>
+          <Button
+            size="lg"
+            className="w-full cursor-pointer gap-2.5 bg-warm-800 text-warm-50 shadow-md transition-all hover:bg-warm-900 hover:shadow-lg active:scale-[0.98] disabled:opacity-40"
+            onClick={handleExportPdf}
+            disabled={!coacheeName || isExporting}
+          >
+            <Download className="size-4" />
+            {isExporting ? "Generando PDF…" : "Guardar en PDF"}
+          </Button>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
