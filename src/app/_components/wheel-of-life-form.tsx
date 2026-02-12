@@ -68,6 +68,8 @@ import WheelScoreGrid from "./wheel-of-life-score-grid";
 import {
   createPdfFilename,
   formatDateForLocale,
+  getHueFromHsl,
+  getWheelColor,
   hslToRgb,
   svgToDataUrl,
 } from "./wheel-of-life-utils";
@@ -109,6 +111,11 @@ export default function WheelOfLifeForm() {
   const wheelPresentation = useMemo(() => {
     return getWheelPresentation(wheelType, customConfig, tModel);
   }, [customConfig, tModel, wheelType]);
+
+  const baseHue = useMemo(
+    () => getHueFromHsl(wheelPresentation.colors.fill),
+    [wheelPresentation.colors.fill],
+  );
 
   useEffect(() => {
     if (isCustomConfigured) {
@@ -258,6 +265,11 @@ export default function WheelOfLifeForm() {
       presentation.categories.forEach((category, index) => {
         const score = values[index] ?? 5;
         const currentY = tableY + 8 + index * 7;
+        const { fill } = getWheelColor(
+          index,
+          presentation.categories.length,
+          getHueFromHsl(presentation.colors.fill),
+        );
 
         pdf.text(`${category}:`, 28, currentY);
         pdf.text(`${score}/10`, 120, currentY);
@@ -269,7 +281,7 @@ export default function WheelOfLifeForm() {
         pdf.setFillColor(230, 230, 230);
         pdf.roundedRect(barX, currentY - 3, barWidth, 4, 1, 1, "FD");
 
-        const rgb = hslToRgb(presentation.colors.fill);
+        const rgb = hslToRgb(fill);
         pdf.setFillColor(rgb.r, rgb.g, rgb.b);
         pdf.roundedRect(
           barX,
@@ -493,6 +505,12 @@ export default function WheelOfLifeForm() {
                       const currentValue =
                         typeof field.value === "number" ? field.value : 5;
 
+                      const { fill } = getWheelColor(
+                        index,
+                        wheelPresentation.categories.length,
+                        baseHue,
+                      );
+
                       return (
                         <div className="group rounded-xl border border-transparent px-3.5 py-3 transition-all duration-200 hover:border-warm-200/80 hover:bg-warm-50/40 hover:shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
                           <div className="mb-2.5 flex items-center justify-between gap-3">
@@ -511,10 +529,7 @@ export default function WheelOfLifeForm() {
                               </TooltipContent>
                             </Tooltip>
 
-                            <ScoreIndicator
-                              value={currentValue}
-                              color={wheelPresentation.colors.fill}
-                            />
+                            <ScoreIndicator value={currentValue} color={fill} />
                           </div>
 
                           <Slider
@@ -528,7 +543,7 @@ export default function WheelOfLifeForm() {
                             className="w-full cursor-pointer"
                             style={
                               {
-                                "--slider-color": wheelPresentation.colors.fill,
+                                "--slider-color": fill,
                               } as React.CSSProperties
                             }
                             aria-label={t("ratingsCard.sliderAria", {
@@ -638,7 +653,7 @@ export default function WheelOfLifeForm() {
                 ref={chartRef}
                 className="mx-auto aspect-square w-full max-w-125 flex items-center justify-center"
               >
-                <WheelOfLifeChart data={chartData} />
+                <WheelOfLifeChart data={chartData} baseHue={baseHue} />
               </div>
             </CardContent>
           </Card>
@@ -646,7 +661,7 @@ export default function WheelOfLifeForm() {
           <WheelScoreGrid
             categories={wheelPresentation.categories}
             values={values ?? []}
-            strokeColor={wheelPresentation.colors.stroke}
+            baseHue={baseHue}
           />
 
           <Button

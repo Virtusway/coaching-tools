@@ -1,5 +1,11 @@
-const HSL_PATTERN =
+export const HSL_PATTERN =
   /hsl\((\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%\)/;
+
+export function getHueFromHsl(hsl: string): number {
+  const match = HSL_PATTERN.exec(hsl);
+  if (!match) return 0;
+  return Number.parseFloat(match[1]);
+}
 
 export function splitTickLabel(rawValue: string, maxLength = 14): string[] {
   const splitBySlash = rawValue.split("/").flatMap((part) => {
@@ -183,4 +189,12 @@ export function createPdfFilename(
   const safeFallback = normalizedFallback || "coachee";
 
   return `${safePrefix}-${normalizedName || safeFallback}.pdf`;
+}
+
+export function getWheelColor(index: number, count: number, baseHue: number) {
+  const hue = (baseHue + (index * 360) / count) % 360;
+  return {
+    fill: `hsl(${hue}, 58%, 54%)`,
+    stroke: `hsl(${hue}, 58%, 38%)`,
+  };
 }

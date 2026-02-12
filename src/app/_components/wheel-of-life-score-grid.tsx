@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { getWheelColor } from "./wheel-of-life-utils";
 
 type WheelScoreGridProps = {
   categories: readonly string[];
   values: readonly number[];
-  strokeColor: string;
+  baseHue: number;
 };
 
 function getColumns(count: number): number {
@@ -15,7 +16,7 @@ function getColumns(count: number): number {
 export default function WheelScoreGrid({
   categories,
   values,
-  strokeColor,
+  baseHue,
 }: Readonly<WheelScoreGridProps>) {
   const t = useTranslations("WheelForm");
 
@@ -47,6 +48,11 @@ export default function WheelScoreGrid({
             const absoluteIndex = row.offset + index;
             const value = values[absoluteIndex] ?? 0;
             const percentage = (value / 10) * 100;
+            const { stroke } = getWheelColor(
+              absoluteIndex,
+              categories.length,
+              baseHue,
+            );
 
             return (
               <div
@@ -59,7 +65,7 @@ export default function WheelScoreGrid({
 
                 <div
                   className="mt-1 font-mono text-xl font-bold tabular-nums leading-tight"
-                  style={{ color: strokeColor }}
+                  style={{ color: stroke }}
                   aria-label={t("scoreGrid.itemAria", { category, value })}
                 >
                   {value}
@@ -70,7 +76,7 @@ export default function WheelScoreGrid({
                     className="h-full rounded-full transition-[width,background-color] duration-500 ease-out"
                     style={{
                       width: `${percentage}%`,
-                      backgroundColor: strokeColor,
+                      backgroundColor: stroke,
                       opacity: 0.6,
                     }}
                   />

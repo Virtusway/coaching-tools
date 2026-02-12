@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { splitTickLabel } from "./wheel-of-life-utils";
+import { getWheelColor, splitTickLabel } from "./wheel-of-life-utils";
 
 type WheelOfLifeChartProps = {
   data: Array<{ category: string; value: number }>;
@@ -48,14 +48,6 @@ function sectorPath(
     `A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`,
     "Z",
   ].join(" ");
-}
-
-function getColor(index: number, count: number, baseHue: number) {
-  const hue = (baseHue + (index * 360) / count) % 360;
-  return {
-    fill: `hsl(${hue}, 58%, 54%)`,
-    stroke: `hsl(${hue}, 58%, 38%)`,
-  };
 }
 
 export default function WheelOfLifeChart({
@@ -115,7 +107,7 @@ export default function WheelOfLifeChart({
         const startAngle = ANGLE_OFFSET + i * sectorAngle;
         const endAngle = startAngle + sectorAngle;
         const radius = (item.value / LEVELS) * MAX_RADIUS;
-        const { fill, stroke } = getColor(i, count, baseHue);
+        const { fill, stroke } = getWheelColor(i, count, baseHue);
         const isHovered = hoveredIndex === i;
 
         return (
@@ -221,7 +213,7 @@ export default function WheelOfLifeChart({
             tipRadius,
             midAngle,
           );
-          const { fill } = getColor(hoveredIndex, count, baseHue);
+          const { fill } = getWheelColor(hoveredIndex, count, baseHue);
 
           return (
             <g pointerEvents="none">
