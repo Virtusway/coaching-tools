@@ -171,15 +171,13 @@ export default function WheelOfLifeChart({
         const lines = splitTickLabel(item.category);
 
         // Determine text-anchor based on position
-        const normalizedAngle =
-          ((midAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        // Determine text-anchor based on horizontal position (cosine of angle)
+        const cosAngle = Math.cos(midAngle);
         let textAnchor: "start" | "middle" | "end" = "middle";
-        if (normalizedAngle > 0.3 && normalizedAngle < Math.PI - 0.3) {
+
+        if (cosAngle > 0.05) {
           textAnchor = "start";
-        } else if (
-          normalizedAngle > Math.PI + 0.3 &&
-          normalizedAngle < 2 * Math.PI - 0.3
-        ) {
+        } else if (cosAngle < -0.05) {
           textAnchor = "end";
         }
 
@@ -207,8 +205,10 @@ export default function WheelOfLifeChart({
 
       {/* Hover tooltip badge */}
       {hoveredIndex !== null &&
+        hoveredIndex < data.length &&
         (() => {
           const item = data[hoveredIndex];
+          if (!item) return null;
           const midAngle =
             ANGLE_OFFSET + hoveredIndex * sectorAngle + sectorAngle / 2;
           const tipRadius = Math.min(
