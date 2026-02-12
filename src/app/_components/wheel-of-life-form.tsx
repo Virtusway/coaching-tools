@@ -21,12 +21,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import {
   Field,
   FieldError,
   FieldGroup,
@@ -54,19 +48,13 @@ import { Download, PencilIcon, RotateCcw, UserIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-} from "recharts";
+import WheelOfLifeChart from "./wheel-of-life-chart";
 import WheelOfLifeCustomDialog from "./wheel-of-life-custom-dialog";
 import { AverageScore, ScoreIndicator } from "./wheel-of-life-metrics";
 import {
-  createFormSchema,
   createDefaultCustomConfig,
   createDefaultScores,
+  createFormSchema,
   createInitialFormValues,
   getWheelLabels,
   getWheelPresentation,
@@ -81,46 +69,8 @@ import {
   createPdfFilename,
   formatDateForLocale,
   hslToRgb,
-  splitTickLabel,
   svgToDataUrl,
 } from "./wheel-of-life-utils";
-
-type CustomAngleTickProps = Readonly<{
-  x: number;
-  y: number;
-  payload: { value: string };
-  textAnchor: "start" | "middle" | "end";
-}>;
-
-function CustomAngleTick({
-  x,
-  y,
-  payload,
-  textAnchor,
-}: Readonly<CustomAngleTickProps>) {
-  const lines = splitTickLabel(payload.value);
-  const lineHeight = 14;
-  const yOffset = -((lines.length - 1) * lineHeight) / 2;
-
-  return (
-    <g transform={`translate(${x},${y})`}>
-      {lines.map((line, index) => (
-        <text
-          key={`${line}-${index}`}
-          x={0}
-          y={yOffset + index * lineHeight}
-          textAnchor={textAnchor}
-          fontSize={11}
-          fontWeight={500}
-          fill="currentColor"
-          dominantBaseline="central"
-        >
-          {line}
-        </text>
-      ))}
-    </g>
-  );
-}
 
 export default function WheelOfLifeForm() {
   const locale = useLocale();
@@ -139,7 +89,10 @@ export default function WheelOfLifeForm() {
   );
 
   const formSchema = useMemo(() => createFormSchema(tModel), [tModel]);
-  const initialFormValues = useMemo(() => createInitialFormValues(tModel), [tModel]);
+  const initialFormValues = useMemo(
+    () => createInitialFormValues(tModel),
+    [tModel],
+  );
   const wheelLabels = useMemo(() => getWheelLabels(tModel), [tModel]);
 
   const form = useForm<FormValues>({
@@ -156,15 +109,6 @@ export default function WheelOfLifeForm() {
   const wheelPresentation = useMemo(() => {
     return getWheelPresentation(wheelType, customConfig, tModel);
   }, [customConfig, tModel, wheelType]);
-
-  const chartConfig: ChartConfig = useMemo(() => {
-    return {
-      value: {
-        label: t("chart.score"),
-        color: wheelPresentation.colors.fill,
-      },
-    };
-  }, [t, wheelPresentation.colors.fill]);
 
   useEffect(() => {
     if (isCustomConfigured) {
@@ -258,7 +202,11 @@ export default function WheelOfLifeForm() {
         values,
         notes,
       } = form.getValues();
-      const presentation = getWheelPresentation(selectedType, customConfig, tModel);
+      const presentation = getWheelPresentation(
+        selectedType,
+        customConfig,
+        tModel,
+      );
 
       const pdf = new jsPDF("portrait", "mm", "a4");
       const pageWidth = 210;
@@ -274,9 +222,14 @@ export default function WheelOfLifeForm() {
       });
 
       pdf.setFontSize(10);
-      pdf.text(`${t("pdf.date")}: ${formatDateForLocale(locale)}`, pageWidth / 2, 39, {
-        align: "center",
-      });
+      pdf.text(
+        `${t("pdf.date")}: ${formatDateForLocale(locale)}`,
+        pageWidth / 2,
+        39,
+        {
+          align: "center",
+        },
+      );
 
       if (chartRef.current) {
         try {
@@ -350,11 +303,7 @@ export default function WheelOfLifeForm() {
       }
 
       pdf.save(
-        createPdfFilename(
-          name,
-          t("pdf.filePrefix"),
-          t("pdf.fileFallback"),
-        ),
+        createPdfFilename(name, t("pdf.filePrefix"), t("pdf.fileFallback")),
       );
     } finally {
       setIsExporting(false);
@@ -449,7 +398,9 @@ export default function WheelOfLifeForm() {
                               aria-invalid={fieldState.invalid}
                             >
                               <SelectValue
-                                placeholder={t("coacheeCard.wheelTypePlaceholder")}
+                                placeholder={t(
+                                  "coacheeCard.wheelTypePlaceholder",
+                                )}
                               />
                             </SelectTrigger>
 
@@ -580,7 +531,9 @@ export default function WheelOfLifeForm() {
                                 "--slider-color": wheelPresentation.colors.fill,
                               } as React.CSSProperties
                             }
-                            aria-label={t("ratingsCard.sliderAria", { category })}
+                            aria-label={t("ratingsCard.sliderAria", {
+                              category,
+                            })}
                           />
                         </div>
                       );
@@ -681,53 +634,11 @@ export default function WheelOfLifeForm() {
             </CardHeader>
 
             <CardContent className="p-4 sm:p-6">
-              <div ref={chartRef}>
-                <ChartContainer
-                  config={chartConfig}
-                  className="mx-auto aspect-square w-full max-w-125"
-                >
-                  <RadarChart data={chartData} outerRadius="70%">
-                    <PolarGrid gridType="circle" />
-
-                    <PolarAngleAxis
-                      dataKey="category"
-                      tick={(tickProps: Record<string, unknown>) => (
-                        <CustomAngleTick
-                          {...(tickProps as Parameters<
-                            typeof CustomAngleTick
-                          >[0])}
-                        />
-                      )}
-                      tickLine={false}
-                    />
-
-                    <PolarRadiusAxis
-                      domain={[0, 10]}
-                      tickCount={11}
-                      tick={false}
-                      axisLine={false}
-                    />
-
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-
-                    <Radar
-                      name={t("chart.score")}
-                      dataKey="value"
-                      stroke={wheelPresentation.colors.stroke}
-                      fill={wheelPresentation.colors.fill}
-                      fillOpacity={0.2}
-                      strokeWidth={2.5}
-                      dot={{
-                        r: 4.5,
-                        fill: wheelPresentation.colors.stroke,
-                        strokeWidth: 2,
-                        stroke: "#fff",
-                      }}
-                      animationDuration={600}
-                      animationEasing="ease-out"
-                    />
-                  </RadarChart>
-                </ChartContainer>
+              <div
+                ref={chartRef}
+                className="mx-auto aspect-square w-full max-w-125 flex items-center justify-center"
+              >
+                <WheelOfLifeChart data={chartData} />
               </div>
             </CardContent>
           </Card>
