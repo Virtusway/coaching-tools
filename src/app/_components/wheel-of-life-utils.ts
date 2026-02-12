@@ -1,5 +1,5 @@
 export const HSL_PATTERN =
-  /hsl\((\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%\)/;
+  /hsl\((\d+(?:\.\d+)?)[,\s]+(\d+(?:\.\d+)?)%[,\s]+(\d+(?:\.\d+)?)%\)/;
 
 export function getHueFromHsl(hsl: string): number {
   const match = HSL_PATTERN.exec(hsl);
@@ -111,9 +111,9 @@ export async function svgToDataUrl(container: HTMLElement): Promise<string> {
       resolve(canvas.toDataURL("image/png"));
     };
 
-    image.onerror = (error) => {
+    image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(error);
+      reject(new Error("Image match failed"));
     };
 
     image.src = objectUrl;
@@ -194,7 +194,7 @@ export function createPdfFilename(
 export function getWheelColor(index: number, count: number, baseHue: number) {
   const hue = (baseHue + (index * 360) / count) % 360;
   return {
-    fill: `hsl(${hue}, 58%, 54%)`,
-    stroke: `hsl(${hue}, 58%, 38%)`,
+    fill: `hsl(${hue} 58% 54%)`,
+    stroke: `hsl(${hue} 58% 38%)`,
   };
 }
