@@ -15,12 +15,7 @@ import { PlusIcon, TrashIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { CustomWheelConfig } from "./wheel-of-life-model";
-import {
-  COLOR_PRESETS,
-  getColorPresetLabel,
-  MAX_CATEGORIES,
-  MIN_CATEGORIES,
-} from "./wheel-of-life-model";
+import { MAX_CATEGORIES, MIN_CATEGORIES } from "./wheel-of-life-model";
 
 type CustomDialogProps = {
   open: boolean;
@@ -88,7 +83,9 @@ export default function WheelOfLifeCustomDialog({
       ...current,
       categories: [
         ...current.categories,
-        tModel("custom.defaultCategory", { index: current.categories.length + 1 }),
+        tModel("custom.defaultCategory", {
+          index: current.categories.length + 1,
+        }),
       ],
     }));
   };
@@ -127,9 +124,7 @@ export default function WheelOfLifeCustomDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-warm-900">
-            {t("title")}
-          </DialogTitle>
+          <DialogTitle className="text-warm-900">{t("title")}</DialogTitle>
           <DialogDescription className="text-warm-500">
             {t("description", { min: MIN_CATEGORIES, max: MAX_CATEGORIES })}
           </DialogDescription>
@@ -137,7 +132,9 @@ export default function WheelOfLifeCustomDialog({
 
         <div className="space-y-5 py-2">
           <Field data-invalid={Boolean(errors.title)}>
-            <FieldLabel htmlFor="custom-title">{t("wheelTitleLabel")}</FieldLabel>
+            <FieldLabel htmlFor="custom-title">
+              {t("wheelTitleLabel")}
+            </FieldLabel>
             <Input
               id="custom-title"
               name="custom-title"
@@ -160,49 +157,6 @@ export default function WheelOfLifeCustomDialog({
               </p>
             )}
           </Field>
-
-          <div>
-            <FieldLabel>{t("colorLabel")}</FieldLabel>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              {COLOR_PRESETS.map((preset, index) => {
-                const isSelected = draft.colorIndex === index;
-
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => {
-                      setDraft((current) => ({
-                        ...current,
-                        colorIndex: index,
-                      }));
-                    }}
-                    className="touch-manipulation group relative flex size-8 items-center justify-center rounded-full border-2 transition-[box-shadow,border-color] duration-200 focus-visible:ring-2 focus-visible:ring-warm-400 focus-visible:ring-offset-2 focus-visible:outline-none"
-                    style={{
-                      backgroundColor: preset.fill,
-                      borderColor: isSelected ? preset.stroke : "transparent",
-                      boxShadow: isSelected
-                        ? `0 0 0 2px ${preset.fill}40`
-                        : "none",
-                    }}
-                    title={getColorPresetLabel(preset.id, tModel)}
-                    aria-label={t("selectColorAria", {
-                      color: getColorPresetLabel(preset.id, tModel),
-                    })}
-                    aria-pressed={isSelected}
-                  >
-                    {isSelected && (
-                      <div
-                        className="size-2 rounded-full bg-white"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           <div>
             <div className="flex items-center justify-between">
@@ -231,7 +185,7 @@ export default function WheelOfLifeCustomDialog({
                 const error = errors[`cat-${index}`];
 
                 return (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={category} className="flex items-center gap-2">
                     <span className="w-5 text-center text-xs font-mono text-warm-400">
                       {index + 1}
                     </span>
