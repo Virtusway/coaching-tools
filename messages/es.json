@@ -142,19 +142,19 @@
   },
   "WheelCustomDialog": {
     "title": "Configurar Rueda Personalizada",
-    "description": "Define el titulo, las categorías ({min}-{max}) y el color de tu rueda.",
-    "wheelTitleLabel": "Titulo de la Rueda",
+    "description": "Define el título y las categorías de tu rueda.",
+    "wheelTitleLabel": "Título de la Rueda",
     "wheelTitlePlaceholder": "Ej: Rueda del Bienestar...",
     "colorLabel": "Color",
     "selectColorAria": "Seleccionar color {color}",
-    "categoriesLabel": "Categorías ({current}/{max})",
+    "categoriesLabel": "Categorías",
     "addCategory": "Añadir",
     "categoryPlaceholder": "Categoría {index}...",
     "removeCategoryAria": "Eliminar categoría {index}",
     "cancel": "Cancelar",
     "save": "Guardar Configuración",
     "validation": {
-      "titleRequired": "El titulo es obligatorio",
+      "titleRequired": "El título es obligatorio",
       "categoryEmpty": "La categoría no puede estar vacía",
       "categoryDuplicated": "Categoría duplicada"
     }

@@ -11,11 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { PlusIcon, TrashIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { CustomWheelConfig } from "./wheel-of-life-model";
-import { MAX_CATEGORIES, MIN_CATEGORIES } from "./wheel-of-life-model";
 
 type CustomDialogProps = {
   open: boolean;
@@ -62,7 +60,6 @@ export default function WheelOfLifeCustomDialog({
   onSave,
 }: Readonly<CustomDialogProps>) {
   const t = useTranslations("WheelCustomDialog");
-  const tModel = useTranslations("WheelModel");
   const [draft, setDraft] = useState<CustomWheelConfig>(config);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -72,35 +69,6 @@ export default function WheelOfLifeCustomDialog({
       nextCategories[index] = value;
       return { ...current, categories: nextCategories };
     });
-  };
-
-  const handleAddCategory = () => {
-    if (draft.categories.length >= MAX_CATEGORIES) {
-      return;
-    }
-
-    setDraft((current) => ({
-      ...current,
-      categories: [
-        ...current.categories,
-        tModel("custom.defaultCategory", {
-          index: current.categories.length + 1,
-        }),
-      ],
-    }));
-  };
-
-  const handleRemoveCategory = (index: number) => {
-    if (draft.categories.length <= MIN_CATEGORIES) {
-      return;
-    }
-
-    setDraft((current) => ({
-      ...current,
-      categories: current.categories.filter((_, currentIndex) => {
-        return currentIndex !== index;
-      }),
-    }));
   };
 
   const handleSave = () => {
@@ -126,7 +94,7 @@ export default function WheelOfLifeCustomDialog({
         <DialogHeader>
           <DialogTitle className="text-warm-900">{t("title")}</DialogTitle>
           <DialogDescription className="text-warm-500">
-            {t("description", { min: MIN_CATEGORIES, max: MAX_CATEGORIES })}
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -160,24 +128,7 @@ export default function WheelOfLifeCustomDialog({
 
           <div>
             <div className="flex items-center justify-between">
-              <FieldLabel>
-                {t("categoriesLabel", {
-                  current: draft.categories.length,
-                  max: MAX_CATEGORIES,
-                })}
-              </FieldLabel>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleAddCategory}
-                disabled={draft.categories.length >= MAX_CATEGORIES}
-                className="touch-manipulation gap-1 text-warm-500 hover:text-warm-700"
-              >
-                <PlusIcon className="size-3.5" aria-hidden="true" />
-                {t("addCategory")}
-              </Button>
+              <FieldLabel>{t("categoriesLabel")}</FieldLabel>
             </div>
 
             <div className="mt-2 space-y-2">
@@ -185,7 +136,7 @@ export default function WheelOfLifeCustomDialog({
                 const error = errors[`cat-${index}`];
 
                 return (
-                  <div key={category} className="flex items-center gap-2">
+                  <div key={index} className="flex items-center gap-2">
                     <span className="w-5 text-center text-xs font-mono text-warm-400">
                       {index + 1}
                     </span>
@@ -203,20 +154,6 @@ export default function WheelOfLifeCustomDialog({
                       className="border-warm-200 bg-warm-50/50 focus-visible:border-terracotta focus-visible:ring-terracotta/20"
                       aria-invalid={Boolean(error)}
                     />
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        handleRemoveCategory(index);
-                      }}
-                      disabled={draft.categories.length <= MIN_CATEGORIES}
-                      className="touch-manipulation size-8 shrink-0 text-warm-400 hover:text-destructive"
-                      aria-label={t("removeCategoryAria", { index: index + 1 })}
-                    >
-                      <TrashIcon className="size-3.5" aria-hidden="true" />
-                    </Button>
 
                     {error && (
                       <p
