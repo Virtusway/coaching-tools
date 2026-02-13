@@ -192,7 +192,11 @@ export function createPdfFilename(
 }
 
 export function getWheelColor(index: number, count: number, baseHue: number) {
-  const hue = (baseHue + (index * 360) / count) % 360;
+  // Pair opposite sectors so related categories share a color:
+  // for 8 items -> 0/4, 1/5, 2/6, 3/7.
+  const pairCount = Math.max(1, Math.ceil(count / 2));
+  const pairIndex = index % pairCount;
+  const hue = (baseHue + (pairIndex * 360) / pairCount) % 360;
   return {
     fill: `hsl(${hue} 58% 54%)`,
     stroke: `hsl(${hue} 58% 38%)`,
