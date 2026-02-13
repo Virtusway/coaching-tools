@@ -16,6 +16,11 @@ const LEVELS = 10;
 const LEVEL_STEP = MAX_RADIUS / LEVELS;
 const LABEL_OFFSET = 24;
 const ANGLE_OFFSET = -Math.PI / 2;
+const COORDINATE_PRECISION = 4;
+
+function roundCoordinate(value: number): number {
+  return Number(value.toFixed(COORDINATE_PRECISION));
+}
 
 function polarToCartesian(
   cx: number,
@@ -24,8 +29,8 @@ function polarToCartesian(
   angleRad: number,
 ): { x: number; y: number } {
   return {
-    x: cx + radius * Math.cos(angleRad),
-    y: cy + radius * Math.sin(angleRad),
+    x: roundCoordinate(cx + radius * Math.cos(angleRad)),
+    y: roundCoordinate(cy + radius * Math.sin(angleRad)),
   };
 }
 
