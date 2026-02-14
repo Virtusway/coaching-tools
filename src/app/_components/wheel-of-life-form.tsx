@@ -70,7 +70,6 @@ import {
   formatDateForLocale,
   getHueFromHsl,
   getWheelColor,
-  hslToRgb,
   svgToDataUrl,
 } from "./wheel-of-life-utils";
 
@@ -206,7 +205,6 @@ export default function WheelOfLifeForm() {
       const {
         coacheeName: name,
         wheelType: selectedType,
-        values,
         notes,
       } = form.getValues();
       const presentation = getWheelPresentation(
@@ -254,47 +252,7 @@ export default function WheelOfLifeForm() {
         }
       }
 
-      const tableY = 182;
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.text(`${t("pdf.ratings")}:`, 25, tableY);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-
-      presentation.categories.forEach((category, index) => {
-        const score = values[index] ?? 5;
-        const currentY = tableY + 8 + index * 7;
-        const { fill } = getWheelColor(
-          index,
-          presentation.categories.length,
-          getHueFromHsl(presentation.colors.fill),
-        );
-
-        pdf.text(`${category}:`, 28, currentY);
-        pdf.text(`${score}/10`, 120, currentY);
-
-        const barWidth = 50;
-        const barX = 130;
-
-        pdf.setDrawColor(200);
-        pdf.setFillColor(230, 230, 230);
-        pdf.roundedRect(barX, currentY - 3, barWidth, 4, 1, 1, "FD");
-
-        const rgb = hslToRgb(fill);
-        pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-        pdf.roundedRect(
-          barX,
-          currentY - 3,
-          (barWidth * score) / 10,
-          4,
-          1,
-          1,
-          "F",
-        );
-      });
-
-      const notesY = tableY + 8 + presentation.categories.length * 7 + 8;
+      const notesY = 185;
       const notesValue = (notes ?? "").trim();
 
       pdf.setFont("helvetica", "bold");

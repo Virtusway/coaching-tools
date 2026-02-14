@@ -115,6 +115,13 @@ export default function WheelOfLifeChart({
         const { fill, stroke } = getWheelColor(i, count, baseHue);
         const isHovered = hoveredIndex === i;
 
+        // Calculate position for the value text
+        // We place it at 2/3 of the radius to ensure it's inside the slice for larger values
+        // For smaller values, we ensure a minimum distance from center to avoid crowding
+        const textRadius = Math.max(radius * 0.5, 20);
+        const midAngle = startAngle + sectorAngle / 2;
+        const textPos = polarToCartesian(CENTER, CENTER, textRadius, midAngle);
+
         return (
           <g
             key={`sector-${i}`}
@@ -132,7 +139,16 @@ export default function WheelOfLifeChart({
             >
               <title>{`${item.category}: ${item.value}/10`}</title>
             </path>
-            {/* Invisible full-radius sector for hover hit area */}
+            <text
+              x={textPos.x}
+              y={textPos.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="pointer-events-none fill-warm-900 text-[16px] font-bold"
+            >
+              {item.value}
+            </text>
+
             <path
               d={sectorPath(CENTER, CENTER, MAX_RADIUS, startAngle, endAngle)}
               fill="transparent"
@@ -140,7 +156,6 @@ export default function WheelOfLifeChart({
             >
               <title>{`${item.category}: ${item.value}/10`}</title>
             </path>
-            {/* Highlight stroke on hover */}
             {isHovered && radius > 0 && (
               <path
                 d={sectorPath(CENTER, CENTER, radius, startAngle, endAngle)}
@@ -155,7 +170,6 @@ export default function WheelOfLifeChart({
         );
       })}
 
-      {/* Category labels */}
       {data.map((item, i) => {
         const midAngle = ANGLE_OFFSET + i * sectorAngle + sectorAngle / 2;
         const labelRadius = MAX_RADIUS + LABEL_OFFSET;
@@ -167,8 +181,6 @@ export default function WheelOfLifeChart({
         );
         const lines = splitTickLabel(item.category);
 
-        // Determine text-anchor based on position
-        // Determine text-anchor based on horizontal position (cosine of angle)
         const cosAngle = Math.cos(midAngle);
         let textAnchor: "start" | "middle" | "end" = "middle";
 
@@ -200,7 +212,6 @@ export default function WheelOfLifeChart({
         );
       })}
 
-      {/* Hover tooltip badge */}
       {hoveredIndex !== null &&
         hoveredIndex < data.length &&
         (() => {
