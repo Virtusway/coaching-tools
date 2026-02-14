@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { getWheelColor, splitTickLabel } from "./wheel-of-life-utils";
 
 type WheelOfLifeChartProps = {
@@ -59,8 +58,6 @@ export default function WheelOfLifeChart({
   data,
   baseHue = 0,
 }: Readonly<WheelOfLifeChartProps>) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
   const count = data.length;
   if (count === 0) return null;
 
@@ -73,7 +70,6 @@ export default function WheelOfLifeChart({
       role="img"
       aria-label="Wheel of Life chart"
     >
-      {/* Concentric grid circles */}
       {Array.from({ length: LEVELS }, (_, i) => {
         const r = LEVEL_STEP * (i + 1);
         return (
@@ -90,7 +86,6 @@ export default function WheelOfLifeChart({
         );
       })}
 
-      {/* Sector dividing lines */}
       {data.map((_, i) => {
         const angle = ANGLE_OFFSET + i * sectorAngle;
         const end = polarToCartesian(CENTER, CENTER, MAX_RADIUS, angle);
@@ -107,32 +102,22 @@ export default function WheelOfLifeChart({
         );
       })}
 
-      {/* Filled wedges */}
       {data.map((item, i) => {
         const startAngle = ANGLE_OFFSET + i * sectorAngle;
         const endAngle = startAngle + sectorAngle;
         const radius = (item.value / LEVELS) * MAX_RADIUS;
-        const { fill, stroke } = getWheelColor(i, count, baseHue);
-        const isHovered = hoveredIndex === i;
+        const { fill } = getWheelColor(i, count, baseHue);
 
-        // Calculate position for the value text
-        // We place it at 2/3 of the radius to ensure it's inside the slice for larger values
-        // For smaller values, we ensure a minimum distance from center to avoid crowding
         const textRadius = Math.max(radius * 0.5, 20);
         const midAngle = startAngle + sectorAngle / 2;
         const textPos = polarToCartesian(CENTER, CENTER, textRadius, midAngle);
 
         return (
-          <g
-            key={`sector-${i}`}
-            onMouseEnter={() => setHoveredIndex(i)}
-            onMouseLeave={() => setHoveredIndex(null)}
-            className="transition-opacity"
-          >
+          <g key={`sector-${i}`}>
             <path
               d={sectorPath(CENTER, CENTER, radius, startAngle, endAngle)}
               fill={fill}
-              fillOpacity={isHovered ? 0.85 : 0.65}
+              fillOpacity={0.65}
               stroke="white"
               strokeWidth={1.5}
               strokeLinejoin="round"
@@ -156,16 +141,6 @@ export default function WheelOfLifeChart({
             >
               <title>{`${item.category}: ${item.value}/10`}</title>
             </path>
-            {isHovered && radius > 0 && (
-              <path
-                d={sectorPath(CENTER, CENTER, radius, startAngle, endAngle)}
-                fill="none"
-                stroke={stroke}
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                pointerEvents="none"
-              />
-            )}
           </g>
         );
       })}
@@ -211,53 +186,6 @@ export default function WheelOfLifeChart({
           </text>
         );
       })}
-
-      {hoveredIndex !== null &&
-        hoveredIndex < data.length &&
-        (() => {
-          const item = data[hoveredIndex];
-          if (!item) return null;
-          const midAngle =
-            ANGLE_OFFSET + hoveredIndex * sectorAngle + sectorAngle / 2;
-          const tipRadius = Math.min(
-            (item.value / LEVELS) * MAX_RADIUS * 0.5 + 20,
-            MAX_RADIUS * 0.65,
-          );
-          const { x: tx, y: ty } = polarToCartesian(
-            CENTER,
-            CENTER,
-            tipRadius,
-            midAngle,
-          );
-          const { fill } = getWheelColor(hoveredIndex, count, baseHue);
-
-          return (
-            <g pointerEvents="none">
-              <rect
-                x={tx - 20}
-                y={ty - 14}
-                width={40}
-                height={28}
-                rx={6}
-                fill="white"
-                fillOpacity={0.95}
-                stroke={fill}
-                strokeWidth={1.5}
-                filter="drop-shadow(0 1px 3px rgba(0,0,0,0.15))"
-              />
-              <text
-                x={tx}
-                y={ty}
-                textAnchor="middle"
-                dominantBaseline="central"
-                className="text-[13px] font-bold"
-                fill={fill}
-              >
-                {item.value}
-              </text>
-            </g>
-          );
-        })()}
     </svg>
   );
 }

@@ -64,7 +64,6 @@ import {
   type FormValues,
   type WheelType,
 } from "./wheel-of-life-model";
-import WheelScoreGrid from "./wheel-of-life-score-grid";
 import {
   createPdfFilename,
   formatDateForLocale,
@@ -615,12 +614,6 @@ export default function WheelOfLifeForm() {
               </div>
             </CardContent>
           </Card>
-
-          <WheelScoreGrid
-            categories={wheelPresentation.categories}
-            values={values ?? []}
-            baseHue={baseHue}
-          />
 
           <Button
             size="lg"
