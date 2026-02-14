@@ -18,8 +18,9 @@
   "LanguageSwitcher": {
     "label": "Idioma",
     "options": {
-      "es": "Espanol",
-      "en": "Ingles"
+      "es": "Español",
+      "en": "Inglés",
+      "ca": "Valencià"
     }
   },
   "WheelModel": {

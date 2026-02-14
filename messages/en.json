@@ -19,7 +19,8 @@
     "label": "Language",
     "options": {
       "es": "Spanish",
-      "en": "English"
+      "en": "English",
+      "ca": "Catalan"
     }
   },
   "WheelModel": {

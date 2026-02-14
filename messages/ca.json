@@ -1,0 +1,163 @@
+{
+  "LayoutMetadata": {
+    "titleDefault": "Coaching Tools | Virtusway",
+    "titleTemplate": "%s | Coaching Tools",
+    "description": "Eines digitals per a coaches professionals. Genera rodes de la vida, avaluacions DISC i més."
+  },
+  "HomePage": {
+    "metadata": {
+      "title": "Roda de la Vida",
+      "description": "Genera rodes de la vida personalitzades per als teus coachees. Tria entre les rodes Personal, de Parella o Professional, ajusta les valoracions i descarrega el resultat en PDF."
+    },
+    "skipToMain": "Vés al contingut principal",
+    "badge": "Virtusway · Eina de Coaching",
+    "title": "Roda de la vida",
+    "description": "Genera rodes de la vida personalitzades. Selecciona el tipus, ajusta les valoracions i descarrega el resultat en PDF.",
+    "footer": "Virtusway · Eines de Coaching · {year}"
+  },
+  "LanguageSwitcher": {
+    "label": "Llengua",
+    "options": {
+      "es": "Castellà",
+      "en": "Anglès",
+      "ca": "Valencià"
+    }
+  },
+  "WheelModel": {
+    "custom": {
+      "defaultTitle": "La meua Roda Personalitzada",
+      "defaultCategory": "Categoria {index}"
+    },
+    "labels": {
+      "personal": "Personal",
+      "pareja": "De Parella",
+      "profesional": "Professional",
+      "personalizada": "Personalitzada"
+    },
+    "titles": {
+      "personal": "RODA DE LA VIDA PERSONAL",
+      "pareja": "RODA DE LA VIDA DE PARELLA",
+      "profesional": "RODA DE LA VIDA PROFESSIONAL",
+      "personalizada": "RODA DE LA VIDA PERSONALITZADA"
+    },
+    "categories": {
+      "personal": {
+        "leisure": "Oci",
+        "work": "Feina",
+        "mind": "Ment",
+        "friends": "Amics",
+        "physical": "Físic",
+        "finances": "Finances",
+        "ethics": "Ètica/creixement espiritual",
+        "familyPartner": "Família/Parella"
+      },
+      "pareja": {
+        "leisure": "Oci",
+        "living": "Convivència",
+        "projects": "Projectes en comú",
+        "sexuality": "Sexualitat",
+        "environment": "Entorn",
+        "finances": "Finances",
+        "family": "Família (fills/pares)",
+        "affectionCommunication": "Afecte/Comunicació"
+      },
+      "profesional": {
+        "teamRelations": "Relacions d'equip",
+        "innerLeadership": "Lideratge interior",
+        "leadingOthers": "Lideratge d'altres",
+        "finances": "Finances",
+        "longTermVision": "Visió/objectius a llarg termini",
+        "effectiveCommunication": "Comunicació efectiva",
+        "productEvaluation": "Avaluació de productes",
+        "customerService": "Atenció al client"
+      }
+    },
+    "colors": {
+      "terracotta": "Terracota",
+      "teal": "Verd blauós",
+      "pink": "Rosa",
+      "blue": "Blau",
+      "violet": "Violeta",
+      "amber": "Àmbar",
+      "emerald": "Esmeralda",
+      "indigo": "Índigo"
+    },
+    "validation": {
+      "coacheeNameRequired": "El nom del coachee és obligatori"
+    }
+  },
+  "WheelForm": {
+    "chart": {
+      "score": "Valoració"
+    },
+    "coacheeCard": {
+      "title": "Dades del Coachee",
+      "description": "Nom i tipus de roda a avaluar.",
+      "nameLabel": "Nom del Coachee",
+      "namePlaceholder": "Ex: Maria Garcia...",
+      "wheelTypeLabel": "Tipus de Roda",
+      "wheelTypePlaceholder": "Selecciona un tipus",
+      "editCustomWheel": "Editar roda personalitzada"
+    },
+    "ratingsCard": {
+      "title": "Valoracions",
+      "description": "Ajusta cada categoria de l'1 al 10.",
+      "range": "1 - 10",
+      "categoryScore": "{category}: {value}/10",
+      "sliderAria": "Valoració per a {category}"
+    },
+    "scoreIndicatorAria": "Valoració {value} de 10",
+    "averageScore": {
+      "label": "Mitjana general",
+      "overTen": "sobre 10",
+      "aria": "Mitjana {value} sobre 10"
+    },
+    "scoreGrid": {
+      "empty": "No hi ha categories disponibles per mostrar.",
+      "itemAria": "{category}: {value} sobre 10"
+    },
+    "notes": {
+      "label": "Notes de la sessió",
+      "placeholder": "Observacions, reflexions o comentaris sobre la sessió..."
+    },
+    "reset": {
+      "button": "Restablir tot",
+      "dialogTitle": "Restablir la sessió actual",
+      "dialogDescription": "Estàs a punt d'esborrar el nom, les valoracions, les notes i la configuració personalitzada. Aquesta acció no es pot desfer.",
+      "cancel": "Cancel·lar",
+      "confirm": "Restablir tot"
+    },
+    "pdf": {
+      "coachee": "Coachee",
+      "date": "Data",
+      "chartCaptureError": "(No s'ha pogut capturar el gràfic)",
+      "ratings": "Valoracions",
+      "notes": "Notes",
+      "filePrefix": "roda-vida",
+      "fileFallback": "coachee"
+    },
+    "export": {
+      "generating": "Generant PDF...",
+      "save": "Desar com a PDF"
+    }
+  },
+  "WheelCustomDialog": {
+    "title": "Configurar roda personalitzada",
+    "description": "Defineix el títol i les categories de la teua roda.",
+    "wheelTitleLabel": "Títol de la roda",
+    "wheelTitlePlaceholder": "Ex: Roda del Benestar...",
+    "colorLabel": "Color",
+    "selectColorAria": "Selecciona el color {color}",
+    "categoriesLabel": "Categories",
+    "addCategory": "Afegeix",
+    "categoryPlaceholder": "Categoria {index}...",
+    "removeCategoryAria": "Eliminar categoria {index}",
+    "cancel": "Cancel·lar",
+    "save": "Desar configuració",
+    "validation": {
+      "titleRequired": "El títol és obligatori",
+      "categoryEmpty": "La categoria no pot estar buida",
+      "categoryDuplicated": "Categoria duplicada"
+    }
+  }
+}
